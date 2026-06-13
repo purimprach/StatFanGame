@@ -1,0 +1,39 @@
+:root {
+  --navy: #0a1628;
+  --navy-deep: #050d1a;
+  --sky-blue: #38bdf8;
+  --sky-blue-dark: #0ea5e9;
+  --gold: #d4af37;
+  --gold-light: #fbbf24;
+  --text-white: #ffffff;
+
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-white);
+  background-color: var(--navy-deep);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
