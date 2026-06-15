@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
 import {
@@ -7,7 +7,8 @@ import {
   getRoundHint,
   getSiasaCategoryById,
   getSlotDisplay,
-  getUnitRevealSyllable,
+  getRevealedSyllableCore,
+  shouldSplitTrailingUnit,
   unitRevealShouldAnimate,
 } from '../data/siasaGameData'
 import '../App.css'
@@ -15,6 +16,7 @@ import './HintGame.css'
 import './SiasaGame.css'
 
 const REVEAL_INTERVAL_MS = 480
+const EXPAND_DURATION_MS = 750
 
 const initialHelpers = () => ({
   hint: false,
@@ -29,8 +31,13 @@ export default function SiasaPlayPage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [revealedMarkCount, setRevealedMarkCount] = useState(0)
   const [usedHelpers, setUsedHelpers] = useState(initialHelpers)
+  const [expandComplete, setExpandComplete] = useState(false)
+  const [promptFitScale, setPromptFitScale] = useState(1)
+  const promptWrapRef = useRef(null)
+  const promptRef = useRef(null)
 
   const currentRound = category?.rounds[roundIndex]
+  const isExpandedLayout = usedHelpers.expand || showAnswer
   const expandedUnits = useMemo(
     () => (currentRound ? getExpandedPromptUnits(currentRound.answer) : []),
     [currentRound],
@@ -39,6 +46,7 @@ export default function SiasaPlayPage() {
     () => buildRevealSequence(expandedUnits),
     [expandedUnits],
   )
+  const showExpandedSlots = usedHelpers.expand || showAnswer
 
   useEffect(() => {
     if (!showAnswer) {
@@ -64,6 +72,57 @@ export default function SiasaPlayPage() {
 
     return () => window.clearInterval(timer)
   }, [showAnswer, roundIndex, revealSequence.length])
+
+  useEffect(() => {
+    if (!usedHelpers.expand || showAnswer) {
+      if (!usedHelpers.expand) {
+        setExpandComplete(false)
+      }
+      return undefined
+    }
+
+    setExpandComplete(false)
+    const timer = window.setTimeout(() => setExpandComplete(true), EXPAND_DURATION_MS)
+    return () => window.clearTimeout(timer)
+  }, [usedHelpers.expand, showAnswer, roundIndex])
+
+  useLayoutEffect(() => {
+    const wrap = promptWrapRef.current
+    const prompt = promptRef.current
+
+    if (!isExpandedLayout || !wrap || !prompt) {
+      setPromptFitScale(1)
+      return undefined
+    }
+
+    const measure = () => {
+      prompt.style.setProperty('--siasa-fit-scale', '1')
+      const savedGap = prompt.style.gap
+      prompt.style.gap = '0.02em 0.04em'
+
+      const available = wrap.clientWidth
+      const needed = prompt.scrollWidth
+      const scale =
+        needed > available && available > 0 ? Math.max(0.42, available / needed) : 1
+
+      prompt.style.gap = savedGap
+      setPromptFitScale(scale)
+    }
+
+    measure()
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(wrap)
+
+    return () => observer.disconnect()
+  }, [
+    isExpandedLayout,
+    roundIndex,
+    expandedUnits.length,
+    expandComplete,
+    usedHelpers.expand,
+    showAnswer,
+  ])
 
   if (!category) {
     return (
@@ -112,12 +171,11 @@ export default function SiasaPlayPage() {
   const isLastRound = roundIndex >= category.rounds.length - 1
   const isFirstRound = roundIndex === 0
   const roundHint = getRoundHint(currentRound)
-  const isExpandedLayout = usedHelpers.expand || showAnswer
-  const showExpandedSlots = usedHelpers.expand || showAnswer
 
   const resetRound = () => {
     setShowAnswer(false)
     setRevealedMarkCount(0)
+    setExpandComplete(false)
     setUsedHelpers(initialHelpers())
   }
 
@@ -157,56 +215,103 @@ export default function SiasaPlayPage() {
 
     let displayText = slot.text
     if (slot.isMark) {
-      displayText = `${unit.consonant}${slot.text}`
+      displayText =
+        position === 'before'
+          ? `${slot.text}${unit.consonant}`
+          : `${unit.consonant}${slot.text}`
     }
+
+    const animateClass = slot.animate ? ' siasa-char-unit__glyph--animate' : ''
 
     return (
       <span
         className={`siasa-char-unit__slot siasa-char-unit__slot--${position} ${
           slot.visible ? 'siasa-char-unit__slot--filled' : ''
-        } ${slot.isMark ? 'siasa-char-unit__slot--mark' : ''} ${
-          slot.animate ? 'siasa-char-unit__slot--animate' : ''
-        }`}
+        } ${slot.isMark ? 'siasa-char-unit__slot--mark' : ''}`}
         aria-hidden={!slot.visible}
       >
-        {displayText}
+        {position === 'after' && slot.isMark ? (
+          <span className={`siasa-char-unit__after-glyph${animateClass}`}>{displayText}</span>
+        ) : slot.isMark && (position === 'above' || position === 'below') ? (
+          <span className={`siasa-char-unit__mark-glyph${animateClass}`}>{displayText}</span>
+        ) : (
+          displayText
+        )}
       </span>
     )
   }
 
   const renderExpandedUnit = (unit, index) => {
-    if (showAnswer) {
-      const syllable = getUnitRevealSyllable(unit, index, revealSequence, revealedMarkCount)
-      const animate = unitRevealShouldAnimate(index, revealSequence, revealedMarkCount)
+    const splitTrailing = shouldSplitTrailingUnit(unit)
+    const revealedCore = showAnswer
+      ? getRevealedSyllableCore(unit, index, revealSequence, revealedMarkCount)
+      : null
+    const trailingInCore =
+      splitTrailing &&
+      revealedCore &&
+      revealedCore.endsWith(unit.trailingConsonants.join(''))
+    const coreAnimate =
+      showAnswer && unitRevealShouldAnimate(index, revealSequence, revealedMarkCount)
 
+    if (revealedCore) {
       return (
-        <span key={index} className="siasa-char-unit siasa-char-unit--syllable">
-          <span
-            className={`siasa-char-unit__syllable ${
-              animate ? 'siasa-char-unit__syllable--animate' : ''
-            }`}
-          >
-            {syllable}
+        <Fragment key={index}>
+          <span className="siasa-char-unit">
+            <span className="siasa-char-unit__body">
+              <span
+                className={`siasa-char-unit__syllable${
+                  coreAnimate ? ' siasa-char-unit__glyph--animate' : ''
+                }`}
+              >
+                {revealedCore}
+              </span>
+            </span>
           </span>
-        </span>
+          {splitTrailing &&
+            !trailingInCore &&
+            unit.trailingConsonants.map((char, trailIndex) => (
+              <span key={`${index}-trail-${trailIndex}`} className="siasa-char-unit">
+                <span className="siasa-char-unit__body">
+                  <span className="siasa-char-unit__cons">{char}</span>
+                </span>
+              </span>
+            ))}
+        </Fragment>
       )
     }
 
-    return (
-      <span key={index} className="siasa-char-unit">
+    const charUnit = (
+      <span className="siasa-char-unit">
         {renderSlot(unit, index, 'above')}
         <span className="siasa-char-unit__body">
           {renderSlot(unit, index, 'before')}
-          <span className="siasa-char-unit__cons">{unit.consonant}</span>
+          <span className="siasa-char-unit__cons-stack">
+            <span className="siasa-char-unit__cons">{unit.consonant}</span>
+            {renderSlot(unit, index, 'below')}
+          </span>
           {renderSlot(unit, index, 'after')}
-          {unit.trailingConsonants?.map((char, trailIndex) => (
-            <span key={trailIndex} className="siasa-char-unit__cons">
-              {char}
+          {!splitTrailing &&
+            unit.trailingConsonants?.map((char, trailIndex) => (
+              <span key={trailIndex} className="siasa-char-unit__cons">
+                {char}
+              </span>
+            ))}
+        </span>
+      </span>
+    )
+
+    return (
+      <Fragment key={index}>
+        {charUnit}
+        {splitTrailing &&
+          unit.trailingConsonants.map((char, trailIndex) => (
+            <span key={`${index}-trail-${trailIndex}`} className="siasa-char-unit">
+              <span className="siasa-char-unit__body">
+                <span className="siasa-char-unit__cons">{char}</span>
+              </span>
             </span>
           ))}
-        </span>
-        {renderSlot(unit, index, 'below')}
-      </span>
+      </Fragment>
     )
   }
 
@@ -248,11 +353,21 @@ export default function SiasaPlayPage() {
           <div className={`siasa-panel ${showAnswer ? 'siasa-panel--revealed' : ''}`}>
             <div className="siasa-panel__side siasa-panel__side--left" aria-hidden="true" />
             <div className="siasa-panel__inner">
-              <div className="siasa-prompt-wrap" key={roundIndex}>
+              <div className="siasa-prompt-wrap" key={roundIndex} ref={promptWrapRef}>
                 <p
+                  ref={promptRef}
                   className={`siasa-prompt ${
                     isExpandedLayout ? 'siasa-prompt--expanded' : 'siasa-prompt--compact'
-                  } ${showAnswer ? 'siasa-prompt--revealing' : ''}`}
+                  } ${showAnswer ? 'siasa-prompt--revealing' : ''} ${
+                    usedHelpers.expand && !expandComplete && !showAnswer
+                      ? 'siasa-prompt--expanding'
+                      : ''
+                  }`}
+                  style={
+                    isExpandedLayout
+                      ? { '--siasa-fit-scale': promptFitScale }
+                      : undefined
+                  }
                   role="status"
                   aria-live="polite"
                 >
@@ -310,14 +425,16 @@ export default function SiasaPlayPage() {
             >
               ย้อนกลับ
             </button>
-            <button
-              type="button"
-              className="hint-btn hint-btn--gold siasa-actions__btn"
-              onClick={() => setShowAnswer(true)}
-              disabled={showAnswer}
-            >
-              เฉลย
-            </button>
+            {usedHelpers.expand && expandComplete && (
+              <button
+                type="button"
+                className="hint-btn hint-btn--gold siasa-actions__btn"
+                onClick={() => setShowAnswer(true)}
+                disabled={showAnswer}
+              >
+                เฉลย
+              </button>
+            )}
             <button
               type="button"
               className="hint-btn hint-btn--ghost siasa-actions__btn"

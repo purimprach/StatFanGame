@@ -25,6 +25,36 @@ export const siasaCategories = [
         answer: 'ความน่าจะเป็น',
         hint: 'สถิติ',
       },
+      {
+        prompt: 'คยบญช',
+        answer: 'ค่ายบัญชี',
+        hint: 'ไปต่างจังหวัด',
+      },
+      {
+        prompt: 'หวหนภค',
+        answer: 'หัวหน้าภาค',
+        hint: 'จันทร์เจ้า',
+      },
+      {
+        prompt: 'บณฑต กนตบตร',
+        answer: 'บัณฑิต กันตะบุตร',
+        hint: 'ก่อตั้ง',
+      },
+      {
+        prompt: 'กรงบสบญช',
+        answer: 'กรงบาสบัญชี',
+        hint: 'ทางผ่านไปจามจุรีสแควร์',
+      },
+      {
+        prompt: 'ตหนงวชกร',
+        answer: 'ตำแหน่งวิชาการ',
+        hint: 'รองศาสตราจารย์',
+      },
+      {
+        prompt: 'บรชย ภทรกศล',
+        answer: 'บุรัชย์ ภัทรโกศล',
+        hint: 'อาจารย์',
+      },
     ],
   },
   {
@@ -32,14 +62,116 @@ export const siasaCategories = [
     name: 'B',
     label: 'หมวด B',
     available: true,
-    rounds: [],
+    rounds: [
+      {
+        prompt: 'พนธทย',
+        answer: 'พันธุ์ไทย',
+        hint: 'CBS Lounge',
+      },
+      {
+        prompt: 'สวตร บญพชรนนท',
+        answer: 'สาวิตรี บุญพัชรนนท์',
+        hint: 'อาจารย์',
+      },
+      {
+        prompt: 'หองทบยน',
+        answer: 'ห้องทะเบียน',
+        hint: 'ตึกไชยยศสมบัติ',
+      },
+      {
+        prompt: 'ชนมขมก',
+        answer: 'ชานมไข่มุก',
+        hint: 'เครื่องดื่ม',
+      },
+      {
+        prompt: 'วทยนพนธ',
+        answer: 'วิทยานิพนธ์',
+        hint: 'เอกสารทางวิชาการ',
+      },
+      {
+        prompt: 'ชยยศสมบต',
+        answer: 'ไชยยศสมบัติ',
+        hint: 'อาคาร',
+      },
+      {
+        prompt: 'สรสนทศวทศน',
+        answer: 'สารสนเทศวิทัศน์',
+        hint: 'วิชา',
+      },
+      {
+        prompt: 'ปณฑวก นค',
+        answer: 'ปุณฑวิกา นาคา',
+        hint: 'อาจารย์',
+      },
+      {
+        prompt: 'รหสนสต',
+        answer: 'รหัสนิสิต',
+        hint: 'ตัวเลข 10 หลัก',
+      },
+      {
+        prompt: 'กวยตยวซม',
+        answer: 'ก๋วยเตี๋ยวซุ้ม',
+        hint: 'ร้านอาหาร',
+      },
+    ],
   },
   {
     id: 'c',
     name: 'C',
     label: 'หมวด C',
     available: true,
-    rounds: [],
+    rounds: [
+      {
+        prompt: 'สมตกยง',
+        answer: 'ส้มตำไก่ย่าง',
+        hint: 'อาหาร',
+      },
+      {
+        prompt: 'ศสตรจรย',
+        answer: 'ศาสตราจารย์',
+        hint: 'ตำแหน่งวิชาการ',
+      },
+      {
+        prompt: 'รงอหรมหต',
+        answer: 'โรงอาหารมหิต',
+        hint: 'อาหาร',
+      },
+      {
+        prompt: 'ธต อสถกล',
+        answer: 'ธิติ โอสถากุล',
+        hint: 'อาจารย์',
+      },
+      {
+        prompt: 'สตรบคส',
+        answer: 'สตาร์บัคส์',
+        hint: 'กาแฟ',
+      },
+      {
+        prompt: 'กรรยนรของครอง',
+        answer: 'การเรียนรู้ของเครื่อง',
+        hint: 'วิชาเรียน',
+      },
+      {
+        prompt: 'จมจรสควร',
+        answer: 'จามจุรีสแควร์',
+        hint: 'ห้าง',
+      },
+      {
+        prompt: 'วฐร พงพพงศ',
+        answer: 'วิฐรา พึ่งพาพงศ์',
+        hint: 'อาจารย์',
+      },
+      {
+        prompt: 'อมรกน',
+        answer: 'อเมริกาโน่',
+        hint: 'เครื่องดื่ม',
+      },
+      {
+        prompt: 'ทคนลยสรสนทศ',
+        answer: 'เทคโนโลยีสารสนเทศ',
+        hint: 'สาขา',
+      },
+    ],
   },
 ]
 
@@ -48,10 +180,19 @@ export function getSiasaCategoryById(id) {
 }
 
 const THAI_CONSONANT = /[\u0E01-\u0E2E]/
-const LEADING_VOWELS = new Set(['\u0E40', '\u0E41', '\u0E42', '\u0E44', '\u0E46'])
+const LEADING_VOWELS = new Set([
+  '\u0E40', // เ
+  '\u0E41', // แ
+  '\u0E42', // โ
+  '\u0E43', // ใ
+  '\u0E44', // ไ
+])
+const SARA_AM = '\u0E33' // ำ (sara am = nikahit + aa)
+const NIKAHIT = '\u0E4D' // ํ
+const SARA_AA = '\u0E32' // า
+
 const MARK_ABOVE = new Set([
   '\u0E31', // ั
-  '\u0E33', // ำ
   '\u0E34', // ิ
   '\u0E35', // ี
   '\u0E36', // ึ
@@ -86,7 +227,10 @@ function collectMarks(word, startIndex) {
       break
     }
 
-    if (MARK_ABOVE.has(char)) {
+    if (char === SARA_AM) {
+      aboveMarks.push(NIKAHIT)
+      afterMarks.push(SARA_AA)
+    } else if (MARK_ABOVE.has(char)) {
       aboveMarks.push(char)
     }
 
@@ -205,9 +349,6 @@ export function getRevealSequence(units) {
     unit.afterMarks.forEach((char, markIndex) => {
       sequence.push({ unitIndex, position: 'after', markIndex, char })
     })
-    unit.trailingConsonants.forEach((char, markIndex) => {
-      sequence.push({ unitIndex, position: 'trail', markIndex, char })
-    })
   })
 
   return sequence
@@ -223,7 +364,7 @@ export function getSlotDisplay(
   position,
   sequence,
   revealedCount,
-  showExpandedSlots,
+  showExpandedSlots = false,
 ) {
   const marks =
     position === 'before'
@@ -241,9 +382,9 @@ export function getSlotDisplay(
   const revealedSteps = steps.filter((step) => step.globalIndex < revealedCount)
   const latestStep = revealedCount > 0 ? sequence[revealedCount - 1] : null
   const animate =
+    latestStep?.globalIndex === revealedCount - 1 &&
     latestStep?.unitIndex === unitIndex &&
-    latestStep?.position === position &&
-    revealedSteps.length > 0
+    latestStep?.position === position
 
   if (revealedSteps.length > 0) {
     return {
@@ -255,7 +396,7 @@ export function getSlotDisplay(
   }
 
   if (showExpandedSlots) {
-    return { visible: true, text: '_', isMark: false }
+    return { visible: true, text: '_', isMark: false, animate: false }
   }
 
   return { visible: false, text: '', isMark: false }
@@ -279,17 +420,95 @@ export function getUnitRevealSyllable(unit, unitIndex, sequence, revealedCount) 
   const above = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'above')
   const below = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'below')
   const after = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'after')
-  const trail = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'trail')
 
-  return `${before}${unit.consonant}${above}${below}${after}${trail}`
+  return `${before}${unit.consonant}${below}${above}${after}${unit.trailingConsonants.join('')}`
 }
 
-export function unitRevealShouldAnimate(unitIndex, sequence, revealedCount) {
+function unitMarksFullyRevealed(unit, unitIndex, sequence, revealedCount) {
+  const positions = [
+    ['before', unit.beforeMarks],
+    ['above', unit.aboveMarks],
+    ['below', unit.belowMarks],
+    ['after', unit.afterMarks],
+  ]
+
+  return positions.every(([position, marks]) => {
+    if (marks.length === 0) {
+      return true
+    }
+
+    return (
+      getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, position).length >=
+      marks.length
+    )
+  })
+}
+
+/** Partial syllable with revealed marks in correct Thai Unicode order */
+export function getRevealedSyllableCore(unit, unitIndex, sequence, revealedCount) {
+  const before = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'before')
+  const above = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'above')
+  const below = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'below')
+  const after = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'after')
+
+  if (!before && !above && !below && !after) {
+    return null
+  }
+
+  const trail =
+    unit.beforeMarks.length > 0 &&
+    unit.trailingConsonants.length > 0 &&
+    unitMarksFullyRevealed(unit, unitIndex, sequence, revealedCount)
+      ? unit.trailingConsonants.join('')
+      : ''
+
+  return formatRevealedSyllableCore(unit.consonant, before, above, below, after, trail)
+}
+
+function formatRevealedSyllableCore(consonant, before, above, below, after, trail = '') {
+  if (above.includes(NIKAHIT) && after.includes(SARA_AA)) {
+    return `${before}${consonant}${SARA_AM}${above.replace(NIKAHIT, '')}${below}${after.replace(SARA_AA, '')}${trail}`
+  }
+
+  return `${before}${consonant}${below}${above}${after}${trail}`
+}
+
+export function shouldSplitTrailingUnit(unit) {
+  return unit.before && unit.trailingConsonants.length > 0
+}
+
+export function getRevealedBeforeText(unit, unitIndex, sequence, revealedCount) {
+  const before = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'before')
+  if (!before) {
+    return null
+  }
+  return `${before}${unit.consonant}`
+}
+
+export function getRevealedBelowText(unit, unitIndex, sequence, revealedCount) {
+  const below = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'below')
+  if (!below) {
+    return null
+  }
+  return `${unit.consonant}${below}`
+}
+
+export function getRevealedAboveText(unit, unitIndex, sequence, revealedCount) {
+  const above = getRevealedMarkChars(unit, unitIndex, sequence, revealedCount, 'above')
+  if (!above) {
+    return null
+  }
+
+  return `${unit.consonant}${above}`
+}
+
+export function unitRevealShouldAnimate(unitIndex, sequence, revealedCount, position) {
   if (revealedCount === 0) {
     return false
   }
 
-  return sequence[revealedCount - 1]?.unitIndex === unitIndex
+  return sequence[revealedCount - 1]?.unitIndex === unitIndex &&
+    (!position || sequence[revealedCount - 1]?.position === position)
 }
 
 export function buildRevealSequence(units) {
