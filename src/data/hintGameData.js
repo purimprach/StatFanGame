@@ -17,7 +17,7 @@ export const hintCategories = [
     name: 'นิสิต 2',
     icon: '🎓',
     hints: [
-      'ชมรม',
+      'ประธานชมรม',
       'บาสเกตบอล',
       'สัญญา',
       'เพลง',
@@ -95,7 +95,7 @@ export const hintCategories = [
     name: 'อื่นๆ 2',
     icon: '✨',
     hints: [
-      'คนเยอะ',
+      'ปี1 & ปี2',
       'ครั้งแรก',
       'พี่รหัส',
       'เฟรชชี่',
