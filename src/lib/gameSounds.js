@@ -22,6 +22,38 @@ export function getAudioContext() {
   return audioContext
 }
 
+export function playUiClick() {
+  const ctx = getAudioContext()
+  if (!ctx) {
+    return
+  }
+
+  const t = ctx.currentTime
+
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'triangle'
+  osc.frequency.setValueAtTime(920, t)
+  osc.frequency.exponentialRampToValueAtTime(680, t + 0.045)
+  gain.gain.setValueAtTime(0.11, t)
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07)
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(t)
+  osc.stop(t + 0.075)
+
+  const click = ctx.createOscillator()
+  const clickGain = ctx.createGain()
+  click.type = 'square'
+  click.frequency.setValueAtTime(180, t)
+  clickGain.gain.setValueAtTime(0.035, t)
+  clickGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.025)
+  click.connect(clickGain)
+  clickGain.connect(ctx.destination)
+  click.start(t)
+  click.stop(t + 0.03)
+}
+
 function playRevealWaitPulse(tick = 0) {
   const ctx = getAudioContext()
   if (!ctx) {

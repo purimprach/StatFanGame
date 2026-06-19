@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import { useUiClickSounds } from './hooks/useUiClickSounds'
 import HomePage from './pages/HomePage'
 import HintCategoryPage from './pages/HintCategoryPage'
 import HintPlayPage from './pages/HintPlayPage'
@@ -14,6 +15,8 @@ import AdminAnswersPage from './pages/AdminAnswersPage'
 import StaffAnswerSheetPage from './pages/StaffAnswerSheetPage'
 
 export default function App() {
+  useUiClickSounds()
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
