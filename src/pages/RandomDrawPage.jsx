@@ -308,7 +308,7 @@ export default function RandomDrawPage() {
 
         {totalCount === 0 && (
           <p className="random-draw-page__admin-hint">
-            แอดมินกรอกรายชื่อที่หน้า <strong>/admin-answers</strong> ในส่วน「สุ่มรายชื่อ」ก่อน
+            ยังไม่มีรายชื่อในระบบ — ตรวจสอบการตั้งค่ารายชื่อสุ่ม
           </p>
         )}
 
