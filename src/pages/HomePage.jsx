@@ -163,6 +163,26 @@ export default function HomePage() {
           ))}
         </section>
 
+        <section className="landing__prizes" aria-label="สุ่มรายชื่อ">
+          <h2 className="landing__prizes-title">สุ่มรายชื่อ</h2>
+          <div className="landing__prize-actions">
+            <button
+              type="button"
+              className="landing__prize-btn"
+              onClick={() => navigate('/random/students')}
+            >
+              สุ่มรายชื่อนิสิต
+            </button>
+            <button
+              type="button"
+              className="landing__prize-btn"
+              onClick={() => navigate('/random/teachers')}
+            >
+              สุ่มรายชื่ออาจารย์
+            </button>
+          </div>
+        </section>
+
         <section className="landing__prizes" aria-label="รางวัลพิเศษ">
           <h2 className="landing__prizes-title">รางวัลพิเศษ</h2>
           <div className="landing__prize-actions">

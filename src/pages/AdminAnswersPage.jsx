@@ -20,12 +20,21 @@ import {
   saveFirstTeacherPrize,
   subscribeFirstTeacherPrize,
 } from '../lib/firstTeacherPrize'
+import { saveDrawLists, subscribeDrawLists } from '../lib/drawLists'
 import {
   BRANCH_OPTIONS,
   getQuestionLabel,
   getQuestionValue,
+  normalizeBranch,
   QUESTION_OPTIONS,
 } from '../data/questions'
+import {
+  flattenStudents,
+  namesToText,
+  parseNameLines,
+  STUDENT_BRANCH_LABELS,
+} from '../data/randomDrawData'
+import { REGISTRATION_STUDENT_LISTS, REGISTRATION_SUMMARY } from '../data/studentRegistrationLists'
 import AdminPrizePanel from '../components/AdminPrizePanel'
 import './AdminAnswersPage.css'
 
@@ -67,8 +76,18 @@ export default function AdminAnswersPage() {
   const [savingTeacher, setSavingTeacher] = useState(false)
   const [arrivalPanelOpen, setArrivalPanelOpen] = useState(false)
   const [teacherPanelOpen, setTeacherPanelOpen] = useState(false)
+  const [drawPanelOpen, setDrawPanelOpen] = useState(false)
+  const [drawStudentsText, setDrawStudentsText] = useState({
+    BIT: '',
+    INS: '',
+    STAT: '',
+  })
+  const [drawTeachersText, setDrawTeachersText] = useState('')
+  const [drawListsSaved, setDrawListsSaved] = useState(null)
+  const [savingDrawLists, setSavingDrawLists] = useState(false)
   const arrivalSyncKeyRef = useRef(null)
   const teacherSyncKeyRef = useRef(null)
+  const drawSyncKeyRef = useRef(null)
 
   const applyArrivalSetting = useCallback((setting) => {
     setArrivalSaved(setting)
@@ -97,6 +116,22 @@ export default function AdminAnswersPage() {
     setTeacherTime(setting?.arrivedAt ?? '')
   }, [])
 
+  const applyDrawSetting = useCallback((setting) => {
+    setDrawListsSaved(setting)
+    const syncKey = setting?.updatedAt ?? 'empty'
+    if (drawSyncKeyRef.current === syncKey) {
+      return
+    }
+
+    drawSyncKeyRef.current = syncKey
+    setDrawStudentsText({
+      BIT: namesToText(setting?.students?.BIT ?? []),
+      INS: namesToText(setting?.students?.INS ?? []),
+      STAT: namesToText(setting?.students?.STAT ?? []),
+    })
+    setDrawTeachersText(namesToText(setting?.teachers ?? []))
+  }, [])
+
   const loadAnswers = useCallback(async () => {
     setLoading(true)
     setErrorMessage('')
@@ -121,6 +156,10 @@ export default function AdminAnswersPage() {
   useEffect(() => {
     return subscribeFirstTeacherPrize(applyTeacherSetting)
   }, [applyTeacherSetting])
+
+  useEffect(() => {
+    return subscribeDrawLists(applyDrawSetting)
+  }, [applyDrawSetting])
 
   const demoMode = isUsingLocalDemo()
 
@@ -304,6 +343,71 @@ export default function AdminAnswersPage() {
     }
   }
 
+  const handleSaveDrawLists = async (event) => {
+    event.preventDefault()
+    setSavingDrawLists(true)
+    setErrorMessage('')
+    setActionMessage('')
+
+    try {
+      const saved = await saveDrawLists({
+        students: {
+          BIT: parseNameLines(drawStudentsText.BIT),
+          INS: parseNameLines(drawStudentsText.INS),
+          STAT: parseNameLines(drawStudentsText.STAT),
+        },
+        teachers: parseNameLines(drawTeachersText),
+      })
+      applyDrawSetting(saved)
+      const studentCount = flattenStudents(saved.students).length
+      setActionMessage(
+        `บันทึกรายชื่อสุ่มแล้ว — นิสิต ${studentCount} คน · อาจารย์ ${saved.teachers.length} คน`,
+      )
+    } catch (error) {
+      setErrorMessage(error.message ?? 'บันทึกรายชื่อสุ่มไม่สำเร็จ')
+    } finally {
+      setSavingDrawLists(false)
+    }
+  }
+
+  const handleImportStudentsFromAnswers = () => {
+    const students = Object.fromEntries(BRANCH_OPTIONS.map((branch) => [branch, []]))
+    const seen = Object.fromEntries(BRANCH_OPTIONS.map((branch) => [branch, new Set()]))
+
+    for (const row of rows) {
+      const branch = normalizeBranch(row.branch)
+      const name = row.player_name?.trim()
+      if (!name || seen[branch].has(name)) {
+        continue
+      }
+
+      seen[branch].add(name)
+      students[branch].push(name)
+    }
+
+    setDrawStudentsText({
+      BIT: namesToText(students.BIT),
+      INS: namesToText(students.INS),
+      STAT: namesToText(students.STAT),
+    })
+    setActionMessage('ดึงชื่อนิสิตจากผู้ตอบในระบบแล้ว — กดบันทึกเพื่ออัปเดตจอ MC')
+  }
+
+  const handleImportStudentsFromRegistration = () => {
+    setDrawStudentsText({
+      BIT: namesToText(REGISTRATION_STUDENT_LISTS.BIT),
+      INS: namesToText(REGISTRATION_STUDENT_LISTS.INS),
+      STAT: namesToText(REGISTRATION_STUDENT_LISTS.STAT),
+    })
+    setActionMessage(
+      `โหลดรายชื่อจากฟอร์มลงทะเบียนแล้ว — นิสิต ${REGISTRATION_SUMMARY.total} คน (BIT ${REGISTRATION_SUMMARY.BIT} · INS ${REGISTRATION_SUMMARY.INS} · STAT ${REGISTRATION_SUMMARY.STAT}) — กดบันทึกเพื่ออัปเดตจอ MC`,
+    )
+  }
+
+  const drawSavedSummary = drawListsSaved
+    ? `นิสิต ${flattenStudents(drawListsSaved.students).length} คน · อาจารย์ ${drawListsSaved.teachers.length} คน`
+    : null
+
   return (
     <div className="admin-page">
       {demoMode && (
@@ -477,6 +581,71 @@ export default function AdminAnswersPage() {
             )}
           </div>
         </form>
+        </AdminPrizePanel>
+
+        <AdminPrizePanel
+          label="สุ่มรายชื่อ"
+          hint="หนึ่งชื่อต่อบรรทัด — ปุ่ม MC「สุ่มรายชื่อนิสิต / อาจารย์」บนหน้าแรก"
+          savedName={drawSavedSummary}
+          open={drawPanelOpen}
+          onToggle={() => setDrawPanelOpen((current) => !current)}
+          variant="draw"
+        >
+          <form className="admin-draw-form" onSubmit={handleSaveDrawLists}>
+            <div className="admin-draw-form__grid">
+              {BRANCH_OPTIONS.map((branch) => (
+                <label key={branch} className="admin-draw-form__field">
+                  <span>นิสิต {STUDENT_BRANCH_LABELS[branch]}</span>
+                  <textarea
+                    rows={8}
+                    value={drawStudentsText[branch]}
+                    onChange={(event) =>
+                      setDrawStudentsText((current) => ({
+                        ...current,
+                        [branch]: event.target.value,
+                      }))
+                    }
+                    placeholder={'หนึ่งชื่อต่อบรรทัด\nเช่น นาย สมชาย ใจดี'}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <label className="admin-draw-form__field admin-draw-form__field--wide">
+              <span>อาจารย์ (ไม่แยกสาขา)</span>
+              <textarea
+                rows={8}
+                value={drawTeachersText}
+                onChange={(event) => setDrawTeachersText(event.target.value)}
+                placeholder={'หนึ่งชื่อต่อบรรทัด\nเช่น ผศ. ดร.ภูริพันธุ์ รุจิขจร'}
+              />
+            </label>
+
+            <div className="admin-arrival-form__actions">
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={handleImportStudentsFromRegistration}
+              >
+                โหลดรายชื่อจากฟอร์มลงทะเบียน
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={handleImportStudentsFromAnswers}
+                disabled={rows.length === 0}
+              >
+                ดึงชื่อนิสิตจากผู้ตอบ
+              </button>
+              <button
+                type="submit"
+                className="admin-btn admin-btn--primary"
+                disabled={savingDrawLists}
+              >
+                {savingDrawLists ? 'กำลังบันทึก...' : 'บันทึกรายชื่อสุ่ม'}
+              </button>
+            </div>
+          </form>
         </AdminPrizePanel>
       </section>
 

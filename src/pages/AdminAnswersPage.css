@@ -173,6 +173,15 @@
   color: #7dd3fc;
 }
 
+.admin-arrival-panel--draw {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.admin-arrival-panel--draw .admin-arrival-panel__label {
+  color: #c4b5fd;
+}
+
 .admin-arrival-panel--last-form .admin-arrival-panel__label {
   color: #f0d77a;
 }
@@ -293,6 +302,52 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+}
+
+.admin-draw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.admin-draw-form__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-draw-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-draw-form__field--wide {
+  width: 100%;
+}
+
+.admin-draw-form__field span {
+  font-size: 0.82rem;
+  color: var(--cream-muted);
+}
+
+.admin-draw-form__field textarea {
+  min-height: 10rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(248, 244, 232, 0.2);
+  background: rgba(10, 22, 40, 0.85);
+  color: var(--text-white);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .admin-draw-form__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {

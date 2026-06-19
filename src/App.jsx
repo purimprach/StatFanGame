@@ -8,6 +8,7 @@ import TosakanthCategoryPage from './pages/TosakanthCategoryPage'
 import TosakanthPlayPage from './pages/TosakanthPlayPage'
 import SiasaCategoryPage from './pages/SiasaCategoryPage'
 import SiasaPlayPage from './pages/SiasaPlayPage'
+import RandomDrawPage from './pages/RandomDrawPage'
 import AudiencePage from './pages/AudiencePage'
 import AdminAnswersPage from './pages/AdminAnswersPage'
 import StaffAnswerSheetPage from './pages/StaffAnswerSheetPage'
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/tosakanth/:categoryId" element={<TosakanthPlayPage />} />
       <Route path="/siasa" element={<SiasaCategoryPage />} />
       <Route path="/siasa/:categoryId" element={<SiasaPlayPage />} />
+      <Route path="/random/:mode" element={<RandomDrawPage />} />
       <Route path="/audience" element={<AudiencePage />} />
       <Route path="/admin-answers" element={<AdminAnswersPage />} />
       <Route path="/staff-answers" element={<StaffAnswerSheetPage />} />
