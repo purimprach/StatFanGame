@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   fetchPlayerSubmissions,
   MAX_ANSWER_ATTEMPTS,
@@ -30,9 +30,12 @@ function applySubmissions(submissions, setSubmissions, setStatus) {
 }
 
 export default function AudiencePage() {
-  const [profile, setProfile] = useState(() => getPlayerProfile())
-  const [name, setName] = useState('')
-  const [branch, setBranch] = useState(BRANCH_OPTIONS[0])
+  const initialProfile = getPlayerProfile()
+  const [profile, setProfile] = useState(initialProfile)
+  const [name, setName] = useState(initialProfile?.name ?? '')
+  const [branch, setBranch] = useState(
+    () => normalizeBranch(initialProfile?.branch) ?? BRANCH_OPTIONS[0],
+  )
   const [questionValue, setQuestionValue] = useState('')
   const [answerText, setAnswerText] = useState('')
   const [submissions, setSubmissions] = useState([])
@@ -46,6 +49,8 @@ export default function AudiencePage() {
   const remainingAttempts = Math.max(0, MAX_ANSWER_ATTEMPTS - submissionCount)
   const isLocked = submissionCount >= MAX_ANSWER_ATTEMPTS
   const demoMode = isUsingLocalDemo()
+  const submissionsRef = useRef(submissions)
+  submissionsRef.current = submissions
 
   useEffect(() => {
     if (activeQuestion?.gameType && activeQuestion?.questionKey) {
@@ -56,13 +61,6 @@ export default function AudiencePage() {
       setQuestionValue('')
     }
   }, [activeQuestion])
-
-  useEffect(() => {
-    if (profile) {
-      setName(profile.name)
-      setBranch(normalizeBranch(profile.branch))
-    }
-  }, [profile])
 
   useEffect(() => {
     if (!hasActiveQuestion) {
@@ -90,8 +88,12 @@ export default function AudiencePage() {
         questionKey,
       },
       (remoteSubmissions) => {
+        const previousCount = submissionsRef.current.length
         applySubmissions(remoteSubmissions, setSubmissions, setStatus)
-        setAnswerText('')
+
+        if (remoteSubmissions.length > previousCount) {
+          setAnswerText('')
+        }
       },
     )
   }, [profile, gameType, questionKey, hasActiveQuestion])
@@ -149,6 +151,10 @@ export default function AudiencePage() {
   }
 
   const handleEditProfile = () => {
+    if (profile) {
+      setName(profile.name)
+      setBranch(normalizeBranch(profile.branch))
+    }
     setProfile(null)
     setSubmissions([])
     setStatus('idle')
