@@ -3,10 +3,10 @@ import {
   fetchPlayerSubmissions,
   MAX_ANSWER_ATTEMPTS,
   submitAnswer,
+  subscribePlayerSubmissions,
   isUsingLocalDemo,
 } from '../lib/answersApi'
 import { getPlayerProfile, savePlayerProfile } from '../lib/playerStorage'
-import { getSubmissions, saveSubmission, syncSubmissions } from '../lib/playerSubmissions'
 import { useSyncedActiveQuestion } from '../hooks/useSyncedActiveQuestion'
 import {
   BRANCH_OPTIONS,
@@ -22,6 +22,11 @@ function formatDateTime(value) {
     dateStyle: 'short',
     timeStyle: 'medium',
   }).format(new Date(value))
+}
+
+function applySubmissions(submissions, setSubmissions, setStatus) {
+  setSubmissions(submissions)
+  setStatus(submissions.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
 }
 
 export default function AudiencePage() {
@@ -40,6 +45,7 @@ export default function AudiencePage() {
   const submissionCount = submissions.length
   const remainingAttempts = Math.max(0, MAX_ANSWER_ATTEMPTS - submissionCount)
   const isLocked = submissionCount >= MAX_ANSWER_ATTEMPTS
+  const demoMode = isUsingLocalDemo()
 
   useEffect(() => {
     if (activeQuestion?.gameType && activeQuestion?.questionKey) {
@@ -67,50 +73,27 @@ export default function AudiencePage() {
       return undefined
     }
 
-    setErrorMessage('')
-
-    const localSubmissions = getSubmissions(gameType, questionKey)
-
     if (!profile) {
-      setSubmissions(localSubmissions)
+      setSubmissions([])
       setAnswerText('')
       setStatus('idle')
       return undefined
     }
 
-    let cancelled = false
+    setErrorMessage('')
     setStatus('loading')
 
-    fetchPlayerSubmissions({
-      playerName: profile.name,
-      gameType,
-      questionKey,
-    })
-      .then((remoteSubmissions) => {
-        if (cancelled) {
-          return
-        }
-
-        const merged =
-          remoteSubmissions.length > 0
-            ? syncSubmissions(gameType, questionKey, remoteSubmissions)
-            : localSubmissions
-
-        setSubmissions(merged)
+    return subscribePlayerSubmissions(
+      {
+        playerName: profile.name,
+        gameType,
+        questionKey,
+      },
+      (remoteSubmissions) => {
+        applySubmissions(remoteSubmissions, setSubmissions, setStatus)
         setAnswerText('')
-        setStatus(merged.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSubmissions(localSubmissions)
-          setAnswerText('')
-          setStatus(localSubmissions.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
+      },
+    )
   }, [profile, gameType, questionKey, hasActiveQuestion])
 
   const handleSaveProfile = (event) => {
@@ -144,7 +127,7 @@ export default function AudiencePage() {
     setErrorMessage('')
 
     try {
-      const result = await submitAnswer({
+      await submitAnswer({
         playerName: profile.name,
         branch: profile.branch,
         gameType,
@@ -152,20 +135,15 @@ export default function AudiencePage() {
         answerText: trimmedAnswer,
       })
 
-      const saved = saveSubmission({
+      const remoteSubmissions = await fetchPlayerSubmissions({
+        playerName: profile.name,
         gameType,
         questionKey,
-        answerText: trimmedAnswer,
-        submittedAt: result.submittedAt,
       })
-      const updated = [saved, ...submissions].sort(
-        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
-      )
-      setSubmissions(updated)
+      applySubmissions(remoteSubmissions, setSubmissions, setStatus)
       setAnswerText('')
-      setStatus(updated.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
     } catch (error) {
-      setStatus('idle')
+      setStatus(submissions.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
       setErrorMessage(error.message ?? 'ส่งคำตอบไม่สำเร็จ ลองใหม่อีกครั้ง')
     }
   }
@@ -176,8 +154,6 @@ export default function AudiencePage() {
     setStatus('idle')
     setErrorMessage('')
   }
-
-  const demoMode = isUsingLocalDemo()
 
   return (
     <div className="audience-page">
@@ -191,7 +167,9 @@ export default function AudiencePage() {
         </div>
       )}
       {!demoMode && syncAvailable && (
-        <p className="audience-sync-banner">เชื่อมกับจอเวทีแล้ว — ข้อจะเปลี่ยนตามเกมที่ MC เปิด</p>
+        <p className="audience-sync-banner">
+          เชื่อมกับจอเวทีแล้ว — ข้อและคำตอบอิงจากฐานข้อมูล
+        </p>
       )}
       <header className="audience-header">
         <p className="audience-badge">STAT#55 · Audience Answer</p>
@@ -335,7 +313,8 @@ export default function AudiencePage() {
             </button>
 
             <p className="audience-note">
-              ส่งได้ {MAX_ANSWER_ATTEMPTS} ครั้งต่อข้อ — เมื่อ MC เปิดรอบใหม่บนเวที ข้อจะเปลี่ยนให้อัตโนมัติ
+              ส่งได้ {MAX_ANSWER_ATTEMPTS} ครั้งต่อข้อ — สถานะอัปเดตจากฐานข้อมูล
+              {demoMode ? ' (โหมดทดสอบในเครื่อง)' : ' อัตโนมัติ'}
             </p>
           </form>
         </>

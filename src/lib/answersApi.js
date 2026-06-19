@@ -57,6 +57,67 @@ export async function fetchPlayerSubmissions({ playerName, gameType, questionKey
   }))
 }
 
+export function subscribePlayerSubmissions({ playerName, gameType, questionKey }, onChange) {
+  if (!playerName || !gameType || !questionKey) {
+    onChange([])
+    return () => {}
+  }
+
+  let cancelled = false
+
+  const emitLatest = async () => {
+    if (cancelled) {
+      return
+    }
+
+    try {
+      const submissions = await fetchPlayerSubmissions({
+        playerName,
+        gameType,
+        questionKey,
+      })
+      if (!cancelled) {
+        onChange(submissions)
+      }
+    } catch {
+      if (!cancelled) {
+        onChange([])
+      }
+    }
+  }
+
+  emitLatest()
+
+  const pollMs = isSupabaseConfigured() ? 2000 : 1500
+  const pollId = window.setInterval(emitLatest, pollMs)
+
+  let channel
+  if (isSupabaseConfigured() && supabase) {
+    channel = supabase
+      .channel(`stat-answers-${playerName}-${gameType}-${questionKey}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'stat_answers',
+        },
+        () => {
+          emitLatest()
+        },
+      )
+      .subscribe()
+  }
+
+  return () => {
+    cancelled = true
+    window.clearInterval(pollId)
+    if (channel) {
+      supabase.removeChannel(channel)
+    }
+  }
+}
+
 export async function fetchPlayerSubmission({ playerName, gameType, questionKey }) {
   const submissions = await fetchPlayerSubmissions({ playerName, gameType, questionKey })
   return submissions[0] ?? null

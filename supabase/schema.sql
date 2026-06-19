@@ -28,6 +28,8 @@ create policy "Allow anonymous select"
 create policy "Allow anonymous delete"
   on public.stat_answers for delete to anon, authenticated using (true);
 
+alter publication supabase_realtime add table public.stat_answers;
+
 -- Live game sync: MC play page -> audience phones
 create table if not exists public.stat_active_question (
   id text primary key,

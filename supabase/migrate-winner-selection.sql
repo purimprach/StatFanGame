@@ -41,3 +41,11 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- ให้มือถืออัปเดตเมื่อแอดมินล้างคำตอบ
+do $$
+begin
+  alter publication supabase_realtime add table public.stat_answers;
+exception
+  when duplicate_object then null;
+end $$;
