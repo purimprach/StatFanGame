@@ -9,11 +9,16 @@ import {
 } from '../data/randomDrawData'
 import { BRANCH_OPTIONS } from '../data/questions'
 import { subscribeDrawLists } from '../lib/drawLists'
+import {
+  DRAW_TIMING,
+  getDrawTickDelay,
+  playDrawStart,
+  playDrawTick,
+  playDrawWin,
+} from '../lib/drawSounds'
 import '../App.css'
 import './HintGame.css'
 import './RandomDrawPage.css'
-
-const DRAW_DURATION_MS = 3200
 
 const STUDENT_DRAW_OPTIONS = [
   ...BRANCH_OPTIONS.map((branch) => ({
@@ -115,12 +120,13 @@ export default function RandomDrawPage() {
     setHighlightKey(null)
     setSpinningEntry(pickRandomEntry(pool))
     setSpinTick(0)
+    playDrawStart()
 
     const startedAt = Date.now()
 
     const tick = () => {
       const elapsed = Date.now() - startedAt
-      const progress = Math.min(elapsed / DRAW_DURATION_MS, 1)
+      const progress = Math.min(elapsed / DRAW_TIMING.durationMs, 1)
 
       if (progress >= 1) {
         setSpinningEntry(finalWinner)
@@ -128,6 +134,7 @@ export default function RandomDrawPage() {
         setHighlightKey(entryKey(finalWinner))
         setWinner(finalWinner)
         setIsDrawing(false)
+        playDrawWin()
         return
       }
 
@@ -135,12 +142,13 @@ export default function RandomDrawPage() {
       setSpinningEntry(current)
       setSpinTick((count) => count + 1)
       setHighlightKey(entryKey(current))
+      playDrawTick(progress)
 
-      const delay = 45 + progress ** 2.4 * 320
+      const delay = getDrawTickDelay(progress)
       drawTimerRef.current = window.setTimeout(tick, delay)
     }
 
-    drawTimerRef.current = window.setTimeout(tick, 45)
+    drawTimerRef.current = window.setTimeout(tick, DRAW_TIMING.minDelayMs)
   }
 
   const scopeLabel =
