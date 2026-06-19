@@ -614,6 +614,89 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
+.siasa-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 100%;
+  max-width: min(320px, 100%);
+  padding: 0.85rem 1.25rem;
+  border-radius: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.siasa-timer__label {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.siasa-timer__seconds {
+  margin: 0;
+  font-size: clamp(2.75rem, 10vw, 4rem);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-white);
+}
+
+.siasa-timer__meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.siasa-timer--phase-compact {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.siasa-timer--phase-compact .siasa-timer__seconds {
+  color: #6ee7b7;
+}
+
+.siasa-timer--phase-expand {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.siasa-timer--phase-expand .siasa-timer__seconds {
+  color: #c4b5fd;
+}
+
+.siasa-timer--phase-hint {
+  border-color: rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.siasa-timer--phase-hint .siasa-timer__seconds {
+  color: #f0d77a;
+}
+
+.siasa-timer--urgent {
+  animation: siasa-timer-urgent 0.65s ease-in-out infinite;
+}
+
+.siasa-timer--urgent .siasa-timer__seconds {
+  color: #fca5a5;
+}
+
+@keyframes siasa-timer-urgent {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
 .siasa-helpers {
   display: flex;
   justify-content: center;

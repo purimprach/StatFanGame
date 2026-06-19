@@ -18,6 +18,12 @@ import './SiasaGame.css'
 const REVEAL_INTERVAL_MS = 480
 const EXPAND_DURATION_MS = 750
 
+const TIMER_PHASES = {
+  compact: { duration: 10, label: 'เวลาตอบ' },
+  expand: { duration: 7, label: 'ขยายแล้ว — ตอบ!' },
+  hint: { duration: 5, label: 'คำใบ้ — ตอบ!' },
+}
+
 const initialHelpers = () => ({
   hint: false,
   expand: false,
@@ -33,6 +39,8 @@ export default function SiasaPlayPage() {
   const [usedHelpers, setUsedHelpers] = useState(initialHelpers)
   const [expandComplete, setExpandComplete] = useState(false)
   const [promptFitScale, setPromptFitScale] = useState(1)
+  const [timerPhase, setTimerPhase] = useState('compact')
+  const [secondsLeft, setSecondsLeft] = useState(TIMER_PHASES.compact.duration)
   const promptWrapRef = useRef(null)
   const promptRef = useRef(null)
 
@@ -72,6 +80,63 @@ export default function SiasaPlayPage() {
 
     return () => window.clearInterval(timer)
   }, [showAnswer, roundIndex, revealSequence.length])
+
+  useEffect(() => {
+    if (showAnswer) {
+      return undefined
+    }
+
+    let cancelled = false
+    let phase = 'compact'
+    let remaining = TIMER_PHASES.compact.duration
+
+    setTimerPhase('compact')
+    setSecondsLeft(remaining)
+    setUsedHelpers(initialHelpers())
+    setExpandComplete(false)
+
+    const id = window.setInterval(() => {
+      if (cancelled) {
+        return
+      }
+
+      remaining -= 1
+      setSecondsLeft(remaining)
+
+      if (remaining > 0) {
+        return
+      }
+
+      if (phase === 'compact') {
+        phase = 'expand'
+        remaining = TIMER_PHASES.expand.duration
+        setTimerPhase('expand')
+        setSecondsLeft(remaining)
+        setUsedHelpers((prev) => ({ ...prev, expand: true }))
+        return
+      }
+
+      if (phase === 'expand') {
+        phase = 'hint'
+        remaining = TIMER_PHASES.hint.duration
+        setTimerPhase('hint')
+        setSecondsLeft(remaining)
+        setUsedHelpers((prev) => ({ ...prev, hint: true }))
+        return
+      }
+
+      if (phase === 'hint') {
+        setShowAnswer(true)
+        setTimerPhase('revealed')
+        window.clearInterval(id)
+      }
+    }, 1000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [roundIndex, showAnswer])
 
   useEffect(() => {
     if (!usedHelpers.expand || showAnswer) {
@@ -177,6 +242,8 @@ export default function SiasaPlayPage() {
     setRevealedMarkCount(0)
     setExpandComplete(false)
     setUsedHelpers(initialHelpers())
+    setTimerPhase('compact')
+    setSecondsLeft(TIMER_PHASES.compact.duration)
   }
 
   const handleSkip = () => {
@@ -196,12 +263,8 @@ export default function SiasaPlayPage() {
     resetRound()
   }
 
-  const useHelper = (id) => {
-    if (showAnswer || usedHelpers[id]) {
-      return
-    }
-    setUsedHelpers((prev) => ({ ...prev, [id]: true }))
-  }
+  const timerLabel = TIMER_PHASES[timerPhase]?.label ?? 'เฉลยแล้ว'
+  const timerUrgent = !showAnswer && secondsLeft <= 3
 
   const renderSlot = (unit, unitIndex, position) => {
     const slot = getSlotDisplay(
@@ -386,28 +449,23 @@ export default function SiasaPlayPage() {
             <div className="siasa-panel__side siasa-panel__side--right" aria-hidden="true" />
           </div>
 
-          <div className="siasa-helpers">
-            <button
-              type="button"
-              className={`siasa-helper-btn siasa-helper-btn--expand ${
-                usedHelpers.expand ? 'siasa-helper-btn--used' : ''
+          {!showAnswer && (
+            <div
+              className={`siasa-timer siasa-timer--phase-${timerPhase} ${
+                timerUrgent ? 'siasa-timer--urgent' : ''
               }`}
-              onClick={() => useHelper('expand')}
-              disabled={showAnswer || usedHelpers.expand}
+              role="timer"
+              aria-live="polite"
             >
-              ↔ ขยาย
-            </button>
-            <button
-              type="button"
-              className={`siasa-helper-btn siasa-helper-btn--hint ${
-                usedHelpers.hint ? 'siasa-helper-btn--used' : ''
-              }`}
-              onClick={() => useHelper('hint')}
-              disabled={showAnswer || usedHelpers.hint || !roundHint}
-            >
-              💡 คำใบ้
-            </button>
-          </div>
+              <p className="siasa-timer__label">{timerLabel}</p>
+              <p className="siasa-timer__seconds">{secondsLeft}</p>
+              <p className="siasa-timer__meta">
+                {timerPhase === 'compact' && '10 วินาทีแรก'}
+                {timerPhase === 'expand' && 'หลังขยายตัวอักษร'}
+                {timerPhase === 'hint' && 'หลังเปิดคำใบ้'}
+              </p>
+            </div>
+          )}
 
           {usedHelpers.hint && roundHint && !showAnswer && (
             <p className="siasa-hint-banner" role="status" aria-live="polite">
@@ -425,23 +483,32 @@ export default function SiasaPlayPage() {
             >
               ย้อนกลับ
             </button>
-            {usedHelpers.expand && expandComplete && (
+            {showAnswer ? (
               <button
                 type="button"
                 className="hint-btn hint-btn--gold siasa-actions__btn"
-                onClick={() => setShowAnswer(true)}
-                disabled={showAnswer}
+                onClick={handleSkip}
               >
-                เฉลย
+                {isLastRound ? 'จบหมวด' : 'คำถัดไป'}
               </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="hint-btn hint-btn--ghost siasa-actions__btn"
+                  onClick={() => setShowAnswer(true)}
+                >
+                  เฉลยทันที
+                </button>
+                <button
+                  type="button"
+                  className="hint-btn hint-btn--ghost siasa-actions__btn"
+                  onClick={handleSkip}
+                >
+                  {isLastRound ? 'จบหมวด' : 'ข้าม'}
+                </button>
+              </>
             )}
-            <button
-              type="button"
-              className="hint-btn hint-btn--ghost siasa-actions__btn"
-              onClick={handleSkip}
-            >
-              {isLastRound ? 'จบหมวด' : 'ข้าม'}
-            </button>
           </div>
         </div>
       </main>
