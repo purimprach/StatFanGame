@@ -4,7 +4,7 @@ import PageBackground from '../components/PageBackground'
 import GameStartGate from '../components/GameStartGate'
 import RevealOverlay from '../components/RevealOverlay'
 import { useRevealAnimation } from '../hooks/useRevealAnimation'
-import { useBroadcastActiveQuestion } from '../hooks/useActiveQuestion'
+import { useBroadcastActiveQuestion, usePreparePlayPage, startLiveQuestion } from '../hooks/useActiveQuestion'
 import { fetchFastestCorrectAnswer } from '../lib/answersApi'
 import {
   getPuzzleCategoryById,
@@ -34,6 +34,9 @@ export default function PuzzlePlayPage() {
   const [showWinner, setShowWinner] = useState(false)
   const [winnerData, setWinnerData] = useState(null)
   const [loadingWinner, setLoadingWinner] = useState(false)
+  const [syncError, setSyncError] = useState('')
+
+  usePreparePlayPage()
 
   useBroadcastActiveQuestion(
     category?.name ? 'jigsaw' : null,
@@ -111,6 +114,22 @@ export default function PuzzlePlayPage() {
   const openedCount = openedTiles.size
   const interactionsLocked = !gameStarted || showAnswer
 
+  const handleStartGame = async () => {
+    setSyncError('')
+    setGameStarted(true)
+
+    try {
+      await startLiveQuestion({
+        gameType: 'jigsaw',
+        questionKey: category.name,
+        label: `จิ๊กซอว์ ${category.name}`,
+      })
+    } catch (error) {
+      setGameStarted(false)
+      setSyncError(error.message ?? 'เชื่อมมือถือไม่สำเร็จ ลองใหม่อีกครั้ง')
+    }
+  }
+
   return (
     <div className="landing landing--puzzle-play">
       <PageBackground />
@@ -157,9 +176,13 @@ export default function PuzzlePlayPage() {
         <header className="hint-page__header">
           <h1 className="hint-page__title">ภาพ {category.name}</h1>
           <p className="puzzle-progress">เปิดแล้ว {openedCount}/{PUZZLE_TILE_COUNT}</p>
+          {syncError && <p className="game-sync-error">{syncError}</p>}
+          {gameStarted && !syncError && (
+            <p className="game-sync-ok">เปิดรับคำตอบจากมือถือแล้ว</p>
+          )}
         </header>
 
-        <GameStartGate started={gameStarted} onStart={() => setGameStarted(true)}>
+        <GameStartGate started={gameStarted} onStart={handleStartGame}>
           <div
             className={`puzzle-stage ${showAnswer || showWinner ? 'puzzle-stage--revealed' : ''}`}
           >

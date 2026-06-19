@@ -4,7 +4,7 @@ import PageBackground from '../components/PageBackground'
 import GameStartGate from '../components/GameStartGate'
 import RevealOverlay from '../components/RevealOverlay'
 import { useRevealAnimation } from '../hooks/useRevealAnimation'
-import { useBroadcastActiveQuestion } from '../hooks/useActiveQuestion'
+import { useBroadcastActiveQuestion, usePreparePlayPage, startLiveQuestion } from '../hooks/useActiveQuestion'
 import { fetchFastestCorrectAnswer } from '../lib/answersApi'
 import { getCategoryById, getHintQuestionKey } from '../data/hintGameData'
 import { getQuestionLabel } from '../data/questions'
@@ -29,8 +29,11 @@ export default function HintPlayPage() {
   const [showWinner, setShowWinner] = useState(false)
   const [winnerData, setWinnerData] = useState(null)
   const [loadingWinner, setLoadingWinner] = useState(false)
+  const [syncError, setSyncError] = useState('')
 
   const hintQuestionKey = category ? getHintQuestionKey(category.id) : null
+
+  usePreparePlayPage()
 
   useBroadcastActiveQuestion(
     hintQuestionKey ? 'hint' : null,
@@ -112,6 +115,26 @@ export default function HintPlayPage() {
 
   const interactionsLocked = !gameStarted || showAnswer
 
+  const handleStartGame = async () => {
+    if (!hintQuestionKey) {
+      return
+    }
+
+    setSyncError('')
+    setGameStarted(true)
+
+    try {
+      await startLiveQuestion({
+        gameType: 'hint',
+        questionKey: hintQuestionKey,
+        label: getQuestionLabel('hint', hintQuestionKey),
+      })
+    } catch (error) {
+      setGameStarted(false)
+      setSyncError(error.message ?? 'เชื่อมมือถือไม่สำเร็จ ลองใหม่อีกครั้ง')
+    }
+  }
+
   return (
     <div className="landing landing--scroll">
       <PageBackground />
@@ -157,9 +180,13 @@ export default function HintPlayPage() {
 
         <header className="hint-page__header">
           <h1 className="hint-page__title">{category.name}</h1>
+          {syncError && <p className="game-sync-error">{syncError}</p>}
+          {gameStarted && !syncError && (
+            <p className="game-sync-ok">เปิดรับคำตอบจากมือถือแล้ว</p>
+          )}
         </header>
 
-        <GameStartGate started={gameStarted} onStart={() => setGameStarted(true)}>
+        <GameStartGate started={gameStarted} onStart={handleStartGame}>
           <div
             className={`hint-play-stage ${showAnswer || showWinner ? 'hint-play-stage--revealed' : ''}`}
           >

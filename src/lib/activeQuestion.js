@@ -153,7 +153,7 @@ export function subscribeActiveQuestion(onChange) {
 
   window.addEventListener('storage', onStorage)
 
-  const pollMs = isSupabaseConfigured() ? 2000 : 1500
+  const pollMs = isSupabaseConfigured() ? 1000 : 1500
   const pollId = window.setInterval(emitLatest, pollMs)
 
   let channel
