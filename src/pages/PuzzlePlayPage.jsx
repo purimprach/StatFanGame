@@ -5,7 +5,7 @@ import GameStartGate from '../components/GameStartGate'
 import RevealOverlay from '../components/RevealOverlay'
 import { useRevealAnimation } from '../hooks/useRevealAnimation'
 import { useBroadcastActiveQuestion, usePreparePlayPage, startLiveQuestion } from '../hooks/useActiveQuestion'
-import { fetchFastestCorrectAnswer } from '../lib/answersApi'
+import { fetchDeclaredWinner } from '../lib/winnerSelection'
 import {
   getPuzzleCategoryById,
   getTileBackgroundPosition,
@@ -18,7 +18,7 @@ import './PuzzleGame.css'
 
 function formatWinnerName(winner) {
   if (!winner) {
-    return 'ยังไม่มีผู้ตอบถูก'
+    return 'ยังไม่ได้เลือกผู้ชนะจากแอดมิน'
   }
 
   return winner.branch ? `${winner.playerName} · ${winner.branch}` : winner.playerName
@@ -97,7 +97,7 @@ export default function PuzzlePlayPage() {
 
     setLoadingWinner(true)
     try {
-      const winner = await fetchFastestCorrectAnswer({
+      const winner = await fetchDeclaredWinner({
         gameType: 'jigsaw',
         questionKey: category.name,
       })

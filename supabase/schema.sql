@@ -54,3 +54,31 @@ create policy "Allow anonymous update active question"
 
 -- Enable Realtime for live MC ↔ phone sync
 alter publication supabase_realtime add table public.stat_active_question;
+
+-- Admin picks who MC shows for "คนตอบถูกเร็วที่สุด"
+create table if not exists public.stat_winner_selection (
+  game_type text not null,
+  question_key text not null,
+  player_name text not null,
+  branch text,
+  answer_text text,
+  source_answer_id uuid,
+  updated_at timestamptz default now(),
+  primary key (game_type, question_key)
+);
+
+alter table public.stat_winner_selection enable row level security;
+
+create policy "Allow anonymous read winner selection"
+  on public.stat_winner_selection for select to anon, authenticated using (true);
+
+create policy "Allow anonymous insert winner selection"
+  on public.stat_winner_selection for insert to anon, authenticated with check (true);
+
+create policy "Allow anonymous update winner selection"
+  on public.stat_winner_selection for update to anon, authenticated using (true);
+
+create policy "Allow anonymous delete winner selection"
+  on public.stat_winner_selection for delete to anon, authenticated using (true);
+
+alter publication supabase_realtime add table public.stat_winner_selection;

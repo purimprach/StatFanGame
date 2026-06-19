@@ -4,6 +4,7 @@ import {
   fetchLocalAnswers,
   insertLocalAnswer,
 } from './localAnswersStorage'
+import { clearAllWinnerSelections } from './winnerSelection'
 import { isSupabaseConfigured, supabase } from './supabase'
 
 export function isUsingLocalDemo() {
@@ -112,6 +113,7 @@ export async function fetchAllAnswers() {
 export async function clearAllAnswers() {
   if (!isSupabaseConfigured()) {
     clearLocalAnswers()
+    await clearAllWinnerSelections()
     return
   }
 
@@ -123,6 +125,8 @@ export async function clearAllAnswers() {
   if (error) {
     throw error
   }
+
+  await clearAllWinnerSelections()
 }
 
 export function sortAnswers(rows) {

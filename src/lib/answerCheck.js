@@ -1,10 +1,14 @@
 import { ANSWER_KEY } from '../data/answerKey'
 
 /** ต้องมีครบทุกคำในคำตอบ (หลังตัดคำนำหน้า) */
-const JIGSAW_REQUIRED_TOKENS = {
-  A: ['ภูริพันธุ์', 'รุจิขจร'],
-  B: ['ฐิตา', 'วานิชย์บัญชา'],
-  C: ['อัษฎาพร', 'ทรัพย์สมบูรณ์'],
+const JIGSAW_ANY_TOKEN_RULES = {
+  A: ['ภูริพันธุ์', 'โจ้'],
+  B: ['ฐิตา', 'กี้'],
+  C: ['อัษฎาพร', 'อัษ', 'อัฐ', 'อัส'],
+}
+
+function checkJigsawAnyTokenAnswer(stripped, tokens) {
+  return tokens.some((token) => stripped.includes(token))
 }
 
 const TITLE_PATTERN =
@@ -27,17 +31,17 @@ function getAcceptedAnswers(gameType, questionKey) {
 }
 
 function checkJigsawAnswer(questionKey, answerText) {
-  const required = JIGSAW_REQUIRED_TOKENS[questionKey]
-  if (!required?.length) {
-    return false
-  }
-
   const stripped = stripTitles(answerText)
   if (!stripped) {
     return false
   }
 
-  return required.every((token) => stripped.includes(normalizeAnswer(token)))
+  const anyTokens = JIGSAW_ANY_TOKEN_RULES[questionKey]
+  if (anyTokens?.length) {
+    return checkJigsawAnyTokenAnswer(stripped, anyTokens)
+  }
+
+  return false
 }
 
 export function checkAnswer(gameType, questionKey, answerText) {
