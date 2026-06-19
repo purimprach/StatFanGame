@@ -119,6 +119,12 @@
   outline-offset: 1px;
 }
 
+.audience-input--locked {
+  opacity: 0.85;
+  cursor: not-allowed;
+  background: rgba(10, 22, 40, 0.95);
+}
+
 .audience-btn {
   display: inline-flex;
   align-items: center;
@@ -144,8 +150,8 @@
 }
 
 .audience-btn--primary:disabled {
-  opacity: 0.65;
-  cursor: wait;
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .audience-btn--ghost {

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { submitAnswer, isUsingLocalDemo } from '../lib/answersApi'
 import { getPlayerProfile, savePlayerProfile } from '../lib/playerStorage'
+import { getSubmission, saveSubmission } from '../lib/playerSubmissions'
 import {
   BRANCH_OPTIONS,
+  getQuestionLabel,
   getQuestionValue,
   parseQuestionValue,
   QUESTION_OPTIONS,
@@ -21,6 +23,10 @@ export default function AudiencePage() {
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
+  const { gameType, questionKey } = parseQuestionValue(questionValue)
+  const existingSubmission = getSubmission(gameType, questionKey)
+  const isLocked = Boolean(existingSubmission) || status === 'submitted'
+
   useEffect(() => {
     if (profile) {
       setName(profile.name)
@@ -30,6 +36,18 @@ export default function AudiencePage() {
       }
     }
   }, [profile])
+
+  useEffect(() => {
+    const submission = getSubmission(gameType, questionKey)
+    if (submission) {
+      setAnswerText(submission.answerText)
+      setStatus('submitted')
+    } else {
+      setAnswerText('')
+      setStatus('idle')
+    }
+    setErrorMessage('')
+  }, [gameType, questionKey])
 
   const resolvedBranch = branch === 'อื่นๆ' ? customBranch.trim() : branch
 
@@ -53,13 +71,16 @@ export default function AudiencePage() {
 
   const handleSubmitAnswer = async (event) => {
     event.preventDefault()
+
+    if (isLocked) {
+      return
+    }
+
     const trimmedAnswer = answerText.trim()
     if (!trimmedAnswer) {
       setErrorMessage('กรุณากรอกคำตอบ')
       return
     }
-
-    const { gameType, questionKey } = parseQuestionValue(questionValue)
 
     setStatus('submitting')
     setErrorMessage('')
@@ -72,9 +93,11 @@ export default function AudiencePage() {
         questionKey,
         answerText: trimmedAnswer,
       })
-      setStatus('success')
+
+      saveSubmission({ gameType, questionKey, answerText: trimmedAnswer })
+      setStatus('submitted')
     } catch (error) {
-      setStatus('error')
+      setStatus('idle')
       setErrorMessage(error.message ?? 'ส่งคำตอบไม่สำเร็จ ลองใหม่อีกครั้ง')
     }
   }
@@ -169,10 +192,7 @@ export default function AudiencePage() {
               <span>เกม / ข้อ</span>
               <select
                 value={questionValue}
-                onChange={(e) => {
-                  setQuestionValue(e.target.value)
-                  setStatus('idle')
-                }}
+                onChange={(e) => setQuestionValue(e.target.value)}
               >
                 {QUESTION_OPTIONS.map((option) => (
                   <option
@@ -180,6 +200,7 @@ export default function AudiencePage() {
                     value={getQuestionValue(option.gameType, option.questionKey)}
                   >
                     {option.label}
+                    {getSubmission(option.gameType, option.questionKey) ? ' ✓' : ''}
                   </option>
                 ))}
               </select>
@@ -190,33 +211,34 @@ export default function AudiencePage() {
               <input
                 type="text"
                 value={answerText}
-                onChange={(e) => {
-                  setAnswerText(e.target.value)
-                  setStatus('idle')
-                }}
+                onChange={(e) => setAnswerText(e.target.value)}
                 placeholder="พิมพ์คำตอบตามที่เห็นบนเวที"
                 autoComplete="off"
                 maxLength={200}
+                readOnly={isLocked}
+                className={isLocked ? 'audience-input--locked' : undefined}
               />
             </label>
 
             {errorMessage && <p className="audience-error">{errorMessage}</p>}
 
-            {status === 'success' && (
+            {isLocked && (
               <p className="audience-success" role="status">
-                ส่งคำตอบแล้ว
+                ส่งคำตอบ {getQuestionLabel(gameType, questionKey)} แล้ว — ไม่สามารถแก้ไขได้
               </p>
             )}
 
             <button
               type="submit"
               className="audience-btn audience-btn--primary"
-              disabled={status === 'submitting'}
+              disabled={isLocked || status === 'submitting'}
             >
               {status === 'submitting' ? 'กำลังส่ง...' : 'ส่งคำตอบ'}
             </button>
 
-            <p className="audience-note">ส่งซ้ำได้ หากต้องการแก้คำตอบ — เวลาส่งล่าสุดจะถูกบันทึกใหม่</p>
+            <p className="audience-note">
+              ส่งได้ครั้งเดียวต่อข้อ — เลือกเกม/ข้ออื่นในรายการด้านบนเพื่อส่งคำตอบรอบถัดไป
+            </p>
           </form>
         </>
       )}

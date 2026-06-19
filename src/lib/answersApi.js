@@ -10,6 +10,31 @@ export function isUsingLocalDemo() {
   return !isSupabaseConfigured()
 }
 
+export async function hasPlayerAnswered({ playerName, gameType, questionKey }) {
+  if (!isSupabaseConfigured()) {
+    return fetchLocalAnswers().some(
+      (row) =>
+        row.player_name === playerName &&
+        row.game_type === gameType &&
+        row.question_key === questionKey,
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('stat_answers')
+    .select('id')
+    .eq('player_name', playerName)
+    .eq('game_type', gameType)
+    .eq('question_key', questionKey)
+    .limit(1)
+
+  if (error) {
+    throw error
+  }
+
+  return (data?.length ?? 0) > 0
+}
+
 export async function submitAnswer({
   playerName,
   branch,
@@ -17,6 +42,10 @@ export async function submitAnswer({
   questionKey,
   answerText,
 }) {
+  if (await hasPlayerAnswered({ playerName, gameType, questionKey })) {
+    throw new Error('คุณส่งคำตอบข้อนี้แล้ว ไม่สามารถส่งซ้ำได้')
+  }
+
   const isCorrect = checkAnswer(gameType, questionKey, answerText)
   const payload = {
     player_name: playerName,
