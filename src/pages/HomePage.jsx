@@ -1,9 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import PrizeRevealOverlay from '../components/PrizeRevealOverlay'
 import QrJoinModal from '../components/QrJoinModal'
+import {
+  buildFirstArrivalPrize,
+  resolvePrizeView,
+  SPECIAL_PRIZES,
+} from '../data/specialPrizes'
+import { subscribeFirstArrivalPrize } from '../lib/firstArrivalPrize'
+import { useRevealAnimation } from '../hooks/useRevealAnimation'
 import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
 import '../App.css'
+import './HintGame.css'
 
 const games = [
   {
@@ -65,12 +74,56 @@ function GameCard({ game, onPlay }) {
 export default function HomePage() {
   const navigate = useNavigate()
   const [showQr, setShowQr] = useState(false)
+  const [activePrizeId, setActivePrizeId] = useState(null)
+  const [lastFormStep, setLastFormStep] = useState(0)
+  const [firstArrivalSetting, setFirstArrivalSetting] = useState(null)
   useClearActiveQuestion()
+
+  useEffect(() => subscribeFirstArrivalPrize(setFirstArrivalSetting), [])
+
+  const prizeList = useMemo(
+    () => [
+      buildFirstArrivalPrize(firstArrivalSetting),
+      SPECIAL_PRIZES.firstFormRegistration,
+      SPECIAL_PRIZES.lastFormRegistration,
+    ],
+    [firstArrivalSetting],
+  )
+
+  const activePrize = prizeList.find((prize) => prize.id === activePrizeId) ?? null
+  const displayedPrize = activePrize ? resolvePrizeView(activePrize, lastFormStep) : null
+  const revealReplayKey =
+    activePrize?.id === 'last-form' ? `last-form-${lastFormStep}` : activePrizeId
+  const prizeContentVisible = useRevealAnimation(Boolean(displayedPrize), revealReplayKey)
 
   const handlePlay = (game) => {
     if (game.path) {
       navigate(game.path)
     }
+  }
+
+  const handlePrizeClick = (prizeId) => {
+    setActivePrizeId((current) => {
+      if (current === prizeId) {
+        setLastFormStep(0)
+        return null
+      }
+
+      if (prizeId === 'last-form') {
+        setLastFormStep(0)
+      }
+
+      return prizeId
+    })
+  }
+
+  const handleClosePrize = () => {
+    setActivePrizeId(null)
+    setLastFormStep(0)
+  }
+
+  const handleAdvanceLastForm = () => {
+    setLastFormStep(1)
   }
 
   return (
@@ -104,7 +157,36 @@ export default function HomePage() {
             <GameCard key={game.id} game={game} onPlay={handlePlay} />
           ))}
         </section>
+
+        <section className="landing__prizes" aria-label="รางวัลพิเศษ">
+          <h2 className="landing__prizes-title">รางวัลพิเศษ</h2>
+          <div className="landing__prize-actions">
+            {prizeList.map((prize) => (
+              <button
+                key={prize.id}
+                type="button"
+                className={`landing__prize-btn ${
+                  activePrizeId === prize.id ? 'landing__prize-btn--active' : ''
+                }`}
+                onClick={() => handlePrizeClick(prize.id)}
+              >
+                {activePrizeId === prize.id ? 'ปิดการประกาศ' : prize.buttonLabel}
+              </button>
+            ))}
+          </div>
+        </section>
       </main>
+
+      {displayedPrize && (
+        <PrizeRevealOverlay
+          prize={displayedPrize}
+          visible
+          contentVisible={prizeContentVisible}
+          onClose={handleClosePrize}
+          advanceLabel={displayedPrize.advanceLabel}
+          onAdvance={displayedPrize.advanceLabel ? handleAdvanceLastForm : undefined}
+        />
+      )}
     </div>
   )
 }

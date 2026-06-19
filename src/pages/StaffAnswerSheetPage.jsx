@@ -112,6 +112,113 @@ export default function StaffAnswerSheetPage() {
         ))}
       </section>
 
+      <section className="staff-sheet__section staff-sheet__section--prize">
+        <h2>รางวัลมางานคนแรก (กรอกวันงาน)</h2>
+        <p className="staff-sheet__prize-intro">
+          วันงานให้ <strong>แอดมิน</strong> เปิด{' '}
+          <strong>/admin-answers</strong> → กรอกชื่อในช่อง「รางวัลมางานคนแรก」→
+          กดบันทึก → <strong>MC</strong> กดปุ่ม「รางวัลพิเศษ สำหรับคนที่มางานคนแรก」บนหน้าแรก
+        </p>
+      </section>
+
+      <section className="staff-sheet__section staff-sheet__section--prize">
+        <h2>รางวัลลงทะเบียนฟอร์มคนสุดท้าย</h2>
+        <p className="staff-sheet__prize-intro">
+          <strong>ขั้นที่ 1:</strong> กดปุ่มบนหน้าแรก → ขึ้น <strong>นาย รักษ์พันธ์ มีมาก</strong>{' '}
+          (กรอกล่างสุด 11 มิ.ย. 0:00:49 น.) + ข้อความ「ไม่ได้รับรางวัล — เกินเวลา」
+          <br />
+          <strong>ขั้นที่ 2:</strong> กด <strong>「ประมวลผลใหม่」</strong> → ขึ้น{' '}
+          <strong>นาย ชิษณุพงศ์ เกียรติเพชรรัตน์</strong> (ผู้ได้รางวัลจริง)
+        </p>
+        <div className="staff-sheet__winner-card">
+          <p className="staff-sheet__winner-label">ขั้นที่ 1 · กรอกล่างสุด (ไม่ได้รางวัล)</p>
+          <p className="staff-sheet__winner-name">นาย รักษ์พันธ์ มีมาก</p>
+          <table className="staff-sheet__table staff-sheet__table--winner">
+            <tbody>
+              <tr>
+                <th>เวลาลงทะเบียน</th>
+                <td>11 มิถุนายน 2569 · 0:00:49 น.</td>
+              </tr>
+              <tr>
+                <th>รหัสนิสิต</th>
+                <td>6542101726</td>
+              </tr>
+              <tr>
+                <th>สาขา</th>
+                <td>INS</td>
+              </tr>
+              <tr>
+                <th>สถานะ</th>
+                <td>ไม่ได้รับรางวัล — เกินเวลาปิดรับ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="staff-sheet__winner-card">
+          <p className="staff-sheet__winner-label">ขั้นที่ 2 · ผู้ได้รางวัล (หลังประมวลผลใหม่)</p>
+          <p className="staff-sheet__winner-name">นาย ชิษณุพงศ์ เกียรติเพชรรัตน์</p>
+          <table className="staff-sheet__table staff-sheet__table--winner">
+            <tbody>
+              <tr>
+                <th>เวลาลงทะเบียน</th>
+                <td>10 มิถุนายน 2569 · 22:40:01 น.</td>
+              </tr>
+              <tr>
+                <th>รหัสนิสิต</th>
+                <td>6542027026</td>
+              </tr>
+              <tr>
+                <th>สาขา</th>
+                <td>INS</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="staff-sheet__mc-script">
+          <strong>สคริปต์ MC:</strong> 「ผู้กรอกฟอร์มคนสุดท้ายคือ นาย รักษ์พันธ์ มีมาก
+          แต่กรอกหลังเวลาปิดรับ ไม่ได้รางวัล — กดประมวลผลใหม่...
+          ขอแสดงความยินดีกับ นาย ชิษณุพงศ์ เกียรติเพชรรัตน์ รหัส 6542027026 สาขา INS
+          ผู้กรอกฟอร์มคนสุดท้ายที่อยู่ในเวลา ได้รับรางวัล!」
+        </p>
+      </section>
+
+      <section className="staff-sheet__section staff-sheet__section--prize">
+        <h2>รางวัลลงทะเบียนฟอร์มคนแรก</h2>
+        <p className="staff-sheet__prize-intro">
+          แอดมินประกาศเปิดรับลงทะเบียน <strong>9 มิถุนายน 2569 เวลา 18:12 น.</strong>{' '}
+          ผู้ลงทะเบียนคนแรกเวลา <strong>18:14 น.</strong> — ให้ MC ประกาศมอบรางวัลคนนี้
+        </p>
+        <div className="staff-sheet__winner-card">
+          <p className="staff-sheet__winner-label">ผู้ชนะ · ลงทะเบียนคนแรก</p>
+          <p className="staff-sheet__winner-name">นางสาว วรรณกมล สนิทวงศ์ ณ อยุธยา</p>
+          <table className="staff-sheet__table staff-sheet__table--winner">
+            <tbody>
+              <tr>
+                <th>เวลาลงทะเบียน</th>
+                <td>9 มิถุนายน 2569 · 18:14:23 น.</td>
+              </tr>
+              <tr>
+                <th>รหัสนิสิต</th>
+                <td>6542105226</td>
+              </tr>
+              <tr>
+                <th>สาขา</th>
+                <td>BIT</td>
+              </tr>
+              <tr>
+                <th>ยืนยันเข้าร่วม</th>
+                <td>ไป</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="staff-sheet__mc-script">
+          <strong>สคริปต์ MC:</strong> 「ขอแสดงความยินดีกับ นางสาว วรรณกมล สนิทวงศ์ ณ อยุธยา
+          รหัส 6542105226 สาขา BIT ผู้ลงทะเบียนฟอร์ม STAT#55 คนแรกหลังประกาศ 18:12 น.
+          ได้รับรางวัล!」
+        </p>
+      </section>
+
       <footer className="staff-sheet__footer">
         <p>STAT#55 Bye Nior Game Show 2026 — ผู้สร้างเกม: พิมพ์เอกสารนี้ให้ทีมรันเท่านั้น</p>
       </footer>

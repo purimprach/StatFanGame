@@ -11,6 +11,12 @@ import {
   subscribeWinnerSelection,
 } from '../lib/winnerSelection'
 import {
+  clearFirstArrivalPrize,
+  saveFirstArrivalPrize,
+  subscribeFirstArrivalPrize,
+} from '../lib/firstArrivalPrize'
+import {
+  BRANCH_OPTIONS,
   getQuestionLabel,
   getQuestionValue,
   QUESTION_OPTIONS,
@@ -42,6 +48,12 @@ export default function AdminAnswersPage() {
   const [actionMessage, setActionMessage] = useState('')
   const [winnerSelection, setWinnerSelection] = useState(null)
   const [savingWinnerId, setSavingWinnerId] = useState(null)
+  const [arrivalName, setArrivalName] = useState('')
+  const [arrivalStudentId, setArrivalStudentId] = useState('')
+  const [arrivalBranch, setArrivalBranch] = useState('')
+  const [arrivalTime, setArrivalTime] = useState('')
+  const [arrivalSaved, setArrivalSaved] = useState(null)
+  const [savingArrival, setSavingArrival] = useState(false)
 
   const loadAnswers = useCallback(async () => {
     setLoading(true)
@@ -59,6 +71,16 @@ export default function AdminAnswersPage() {
   useEffect(() => {
     loadAnswers()
   }, [loadAnswers])
+
+  useEffect(() => {
+    return subscribeFirstArrivalPrize((setting) => {
+      setArrivalSaved(setting)
+      setArrivalName(setting?.displayName ?? '')
+      setArrivalStudentId(setting?.studentId ?? '')
+      setArrivalBranch(setting?.branch ?? '')
+      setArrivalTime(setting?.arrivedAt ?? '')
+    })
+  }, [])
 
   const demoMode = isUsingLocalDemo()
 
@@ -167,6 +189,48 @@ export default function AdminAnswersPage() {
     }
   }
 
+  const handleSaveArrivalPrize = async (event) => {
+    event.preventDefault()
+    setSavingArrival(true)
+    setErrorMessage('')
+    setActionMessage('')
+
+    try {
+      const saved = await saveFirstArrivalPrize({
+        displayName: arrivalName,
+        studentId: arrivalStudentId,
+        branch: arrivalBranch,
+        arrivedAt: arrivalTime,
+      })
+      setArrivalSaved(saved)
+      setActionMessage(`บันทึกผู้มางานคนแรกแล้ว — ${saved.displayName}`)
+    } catch (error) {
+      setErrorMessage(error.message ?? 'บันทึกผู้มางานคนแรกไม่สำเร็จ')
+    } finally {
+      setSavingArrival(false)
+    }
+  }
+
+  const handleClearArrivalPrize = async () => {
+    setSavingArrival(true)
+    setErrorMessage('')
+    setActionMessage('')
+
+    try {
+      await clearFirstArrivalPrize()
+      setArrivalSaved(null)
+      setArrivalName('')
+      setArrivalStudentId('')
+      setArrivalBranch('')
+      setArrivalTime('')
+      setActionMessage('ล้างข้อมูลผู้มางานคนแรกแล้ว')
+    } catch (error) {
+      setErrorMessage(error.message ?? 'ล้างข้อมูลไม่สำเร็จ')
+    } finally {
+      setSavingArrival(false)
+    }
+  }
+
   return (
     <div className="admin-page">
       {demoMode && (
@@ -201,6 +265,88 @@ export default function AdminAnswersPage() {
           </button>
         </div>
       </header>
+
+      <section className="admin-arrival-panel">
+        <div className="admin-arrival-panel__header">
+          <div>
+            <p className="admin-arrival-panel__label">รางวัลมางานคนแรก · กรอกวันงาน</p>
+            <p className="admin-arrival-panel__hint">
+              กรอกชื่อเมื่อรู้ผู้มางานคนแรกแล้ว — จอ MC จะอัปเดตอัตโนมัติ (ปุ่ม「รางวัลพิเศษ
+              สำหรับคนที่มางานคนแรก」)
+            </p>
+          </div>
+          {arrivalSaved?.displayName && (
+            <p className="admin-arrival-panel__current">
+              บันทึกแล้ว: <strong>{arrivalSaved.displayName}</strong>
+            </p>
+          )}
+        </div>
+
+        <form className="admin-arrival-form" onSubmit={handleSaveArrivalPrize}>
+          <label className="admin-arrival-form__field admin-arrival-form__field--wide">
+            <span>ชื่อ-นามสกุล</span>
+            <input
+              type="text"
+              value={arrivalName}
+              onChange={(event) => setArrivalName(event.target.value)}
+              placeholder="เช่น นาย สมชาย ใจดี"
+              required
+            />
+          </label>
+          <label className="admin-arrival-form__field">
+            <span>รหัสนิสิต</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={arrivalStudentId}
+              onChange={(event) => setArrivalStudentId(event.target.value)}
+              placeholder="6542..."
+            />
+          </label>
+          <label className="admin-arrival-form__field">
+            <span>สาขา</span>
+            <select
+              value={arrivalBranch}
+              onChange={(event) => setArrivalBranch(event.target.value)}
+            >
+              <option value="">—</option>
+              {BRANCH_OPTIONS.map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-arrival-form__field admin-arrival-form__field--wide">
+            <span>เวลามางาน (ถ้ามี)</span>
+            <input
+              type="text"
+              value={arrivalTime}
+              onChange={(event) => setArrivalTime(event.target.value)}
+              placeholder="เช่น 17:45 น."
+            />
+          </label>
+          <div className="admin-arrival-form__actions">
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={savingArrival}
+            >
+              {savingArrival ? 'กำลังบันทึก...' : 'บันทึกผู้มางานคนแรก'}
+            </button>
+            {arrivalSaved && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={handleClearArrivalPrize}
+                disabled={savingArrival}
+              >
+                ล้าง
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
 
       <div className="admin-toolbar">
         <label className="admin-filter">

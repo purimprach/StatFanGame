@@ -84,3 +84,55 @@ create policy "Allow anonymous delete winner selection"
   on public.stat_winner_selection for delete to anon, authenticated using (true);
 
 alter publication supabase_realtime add table public.stat_winner_selection;
+
+-- First arrival prize (admin fills on event day -> MC home screen)
+create table if not exists public.stat_first_arrival_prize (
+  id text primary key,
+  display_name text,
+  student_id text,
+  branch text,
+  arrived_at text,
+  updated_at timestamptz default now()
+);
+
+alter table public.stat_first_arrival_prize enable row level security;
+
+create policy "Allow anonymous read first arrival prize"
+  on public.stat_first_arrival_prize for select to anon, authenticated using (true);
+
+create policy "Allow anonymous insert first arrival prize"
+  on public.stat_first_arrival_prize for insert to anon, authenticated with check (true);
+
+create policy "Allow anonymous update first arrival prize"
+  on public.stat_first_arrival_prize for update to anon, authenticated using (true);
+
+create policy "Allow anonymous delete first arrival prize"
+  on public.stat_first_arrival_prize for delete to anon, authenticated using (true);
+
+alter publication supabase_realtime add table public.stat_first_arrival_prize;
+
+-- Last form registration prize (admin fills when form closes -> MC home screen)
+create table if not exists public.stat_last_form_prize (
+  id text primary key,
+  display_name text,
+  student_id text,
+  branch text,
+  registered_at text,
+  updated_at timestamptz default now()
+);
+
+alter table public.stat_last_form_prize enable row level security;
+
+create policy "Allow anonymous read last form prize"
+  on public.stat_last_form_prize for select to anon, authenticated using (true);
+
+create policy "Allow anonymous insert last form prize"
+  on public.stat_last_form_prize for insert to anon, authenticated with check (true);
+
+create policy "Allow anonymous update last form prize"
+  on public.stat_last_form_prize for update to anon, authenticated using (true);
+
+create policy "Allow anonymous delete last form prize"
+  on public.stat_last_form_prize for delete to anon, authenticated using (true);
+
+alter publication supabase_realtime add table public.stat_last_form_prize;

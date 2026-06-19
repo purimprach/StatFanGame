@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export function useRevealAnimation(isActive) {
+export function useRevealAnimation(isActive, replayKey = 0) {
   const [contentVisible, setContentVisible] = useState(false)
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export function useRevealAnimation(isActive) {
     setContentVisible(false)
     const timer = window.setTimeout(() => setContentVisible(true), 3000)
     return () => window.clearTimeout(timer)
-  }, [isActive])
+  }, [isActive, replayKey])
 
   return contentVisible
 }
