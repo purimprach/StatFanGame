@@ -13,6 +13,7 @@ import {
   DRAW_TIMING,
   getDrawTickDelay,
   playDrawStart,
+  playDrawSuspenseTick,
   playDrawTick,
   playDrawWin,
 } from '../lib/drawSounds'
@@ -44,6 +45,7 @@ export default function RandomDrawPage() {
   const [highlightKey, setHighlightKey] = useState(null)
   const [spinningEntry, setSpinningEntry] = useState(null)
   const [spinTick, setSpinTick] = useState(0)
+  const [suspenseStep, setSuspenseStep] = useState(0)
   const [winner, setWinner] = useState(null)
   const drawTimerRef = useRef(null)
   useClearActiveQuestion()
@@ -120,21 +122,45 @@ export default function RandomDrawPage() {
     setHighlightKey(null)
     setSpinningEntry(pickRandomEntry(pool))
     setSpinTick(0)
+    setSuspenseStep(0)
     playDrawStart()
 
     const startedAt = Date.now()
 
+    const revealWinner = () => {
+      setSpinningEntry(finalWinner)
+      setSpinTick((count) => count + 1)
+      setHighlightKey(entryKey(finalWinner))
+      setWinner(finalWinner)
+      setIsDrawing(false)
+      setSuspenseStep(0)
+      playDrawWin()
+    }
+
+    const runSuspenseTick = (step) => {
+      const current = pickRandomEntry(pool)
+
+      setSpinningEntry(current)
+      setSpinTick((count) => count + 1)
+      setHighlightKey(entryKey(current))
+      setSuspenseStep(step)
+      playDrawSuspenseTick(step)
+
+      if (step >= DRAW_TIMING.suspenseDelaysMs.length) {
+        drawTimerRef.current = window.setTimeout(revealWinner, DRAW_TIMING.revealPauseMs)
+        return
+      }
+
+      const delay = DRAW_TIMING.suspenseDelaysMs[step - 1]
+      drawTimerRef.current = window.setTimeout(() => runSuspenseTick(step + 1), delay)
+    }
+
     const tick = () => {
       const elapsed = Date.now() - startedAt
-      const progress = Math.min(elapsed / DRAW_TIMING.durationMs, 1)
+      const progress = Math.min(elapsed / DRAW_TIMING.spinPhaseMs, 1)
 
       if (progress >= 1) {
-        setSpinningEntry(finalWinner)
-        setSpinTick((count) => count + 1)
-        setHighlightKey(entryKey(finalWinner))
-        setWinner(finalWinner)
-        setIsDrawing(false)
-        playDrawWin()
+        runSuspenseTick(1)
         return
       }
 
@@ -189,16 +215,34 @@ export default function RandomDrawPage() {
           <div
             className={`random-draw-page__result ${
               winner ? 'random-draw-page__result--winner' : ''
-            } ${isDrawing ? 'random-draw-page__result--drawing' : ''}`}
+            } ${isDrawing ? 'random-draw-page__result--drawing' : ''} ${
+              suspenseStep > 0 ? 'random-draw-page__result--suspense' : ''
+            }`}
           >
             {isDrawing && spinningEntry ? (
               <>
                 <span className="random-draw-page__result-label">
-                  กำลังสุ่ม{scopeLabel ? ` · ${scopeLabel}` : ''}...
+                  {suspenseStep > 0
+                    ? `ใกล้แล้ว... ${suspenseStep}/${DRAW_TIMING.suspenseDelaysMs.length}`
+                    : `กำลังสุ่ม${scopeLabel ? ` · ${scopeLabel}` : ''}...`}
                 </span>
+                {suspenseStep > 0 && (
+                  <div className="random-draw-page__suspense-dots" aria-hidden="true">
+                    {DRAW_TIMING.suspenseDelaysMs.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`random-draw-page__suspense-dot ${
+                          index < suspenseStep ? 'random-draw-page__suspense-dot--on' : ''
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
                 <span
                   key={spinTick}
-                  className="random-draw-page__result-name random-draw-page__spin-name"
+                  className={`random-draw-page__result-name random-draw-page__spin-name ${
+                    suspenseStep > 0 ? 'random-draw-page__spin-name--suspense' : ''
+                  }`}
                 >
                   {spinningEntry.name}
                 </span>
