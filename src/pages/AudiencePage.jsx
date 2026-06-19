@@ -11,6 +11,7 @@ import {
   BRANCH_OPTIONS,
   getQuestionLabel,
   getQuestionValue,
+  normalizeBranch,
   parseQuestionValue,
 } from '../data/questions'
 import './AudiencePage.css'
@@ -26,7 +27,6 @@ export default function AudiencePage() {
   const [profile, setProfile] = useState(() => getPlayerProfile())
   const [name, setName] = useState('')
   const [branch, setBranch] = useState(BRANCH_OPTIONS[0])
-  const [customBranch, setCustomBranch] = useState('')
   const [questionValue, setQuestionValue] = useState('')
   const [answerText, setAnswerText] = useState('')
   const [submission, setSubmission] = useState(null)
@@ -51,10 +51,7 @@ export default function AudiencePage() {
   useEffect(() => {
     if (profile) {
       setName(profile.name)
-      setBranch(BRANCH_OPTIONS.includes(profile.branch) ? profile.branch : 'อื่นๆ')
-      if (!BRANCH_OPTIONS.includes(profile.branch)) {
-        setCustomBranch(profile.branch)
-      }
+      setBranch(normalizeBranch(profile.branch))
     }
   }, [profile])
 
@@ -127,8 +124,6 @@ export default function AudiencePage() {
     }
   }, [profile, gameType, questionKey, hasActiveQuestion])
 
-  const resolvedBranch = branch === 'อื่นๆ' ? customBranch.trim() : branch
-
   const handleSaveProfile = (event) => {
     event.preventDefault()
     const trimmedName = name.trim()
@@ -136,12 +131,8 @@ export default function AudiencePage() {
       setErrorMessage('กรุณากรอกชื่อเล่น')
       return
     }
-    if (branch === 'อื่นๆ' && !customBranch.trim()) {
-      setErrorMessage('กรุณากรอกสาขา')
-      return
-    }
 
-    const saved = savePlayerProfile({ name: trimmedName, branch: resolvedBranch })
+    const saved = savePlayerProfile({ name: trimmedName, branch })
     setProfile(saved)
     setErrorMessage('')
     setStatus('idle')
@@ -241,19 +232,6 @@ export default function AudiencePage() {
               ))}
             </select>
           </label>
-
-          {branch === 'อื่นๆ' && (
-            <label className="audience-field">
-              <span>ระบุสาขา</span>
-              <input
-                type="text"
-                value={customBranch}
-                onChange={(e) => setCustomBranch(e.target.value)}
-                placeholder="พิมพ์สาขาของคุณ"
-                maxLength={40}
-              />
-            </label>
-          )}
 
           {errorMessage && <p className="audience-error">{errorMessage}</p>}
 

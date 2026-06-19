@@ -12,13 +12,25 @@ export const QUESTION_OPTIONS = [
   { gameType: 'hint', questionKey: '8', label: 'คำใบ้ 8' },
 ]
 
-export const BRANCH_OPTIONS = [
-  'สถิติ',
-  'ประกันภัย',
-  'BIT',
-  'IS',
-  'อื่นๆ',
-]
+export const BRANCH_OPTIONS = ['BIT', 'INS', 'STAT']
+
+const LEGACY_BRANCH_MAP = {
+  สถิติ: 'STAT',
+  ประกันภัย: 'INS',
+  IS: 'INS',
+}
+
+export function normalizeBranch(value) {
+  if (!value) {
+    return BRANCH_OPTIONS[0]
+  }
+
+  if (BRANCH_OPTIONS.includes(value)) {
+    return value
+  }
+
+  return LEGACY_BRANCH_MAP[value] ?? BRANCH_OPTIONS[0]
+}
 
 export function getQuestionLabel(gameType, questionKey) {
   const match = QUESTION_OPTIONS.find(
