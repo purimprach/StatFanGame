@@ -7,6 +7,7 @@ import {
   getTosakanthCategoryById,
   LIFELINES,
 } from '../data/tosakanthGameData'
+import { playRevealEmphasis } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 import './TosakanthGame.css'
@@ -79,6 +80,7 @@ export default function TosakanthPlayPage() {
   const handleReveal = () => {
     setShowAnswer(true)
     setLifelineMessage(null)
+    playRevealEmphasis()
   }
 
   const handleSkip = () => {
@@ -258,6 +260,7 @@ export default function TosakanthPlayPage() {
                   className="hint-btn hint-btn--gold tosa-actions__btn"
                   onClick={handleReveal}
                   disabled={showAnswer}
+                  data-ui-click="off"
                 >
                   เฉลย
                 </button>
