@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import RevealOverlay from '../components/RevealOverlay'
+import { useRevealAnimation } from '../hooks/useRevealAnimation'
 import {
   getRandomFriendPrompt,
   getRoundClue,
@@ -25,7 +27,9 @@ export default function TosakanthPlayPage() {
   const navigate = useNavigate()
   const category = getTosakanthCategoryById(categoryId)
   const [roundIndex, setRoundIndex] = useState(0)
-  const [showAnswer, setShowAnswer] = useState(false)
+  const [revealRequested, setRevealRequested] = useState(false)
+  const answerVisible = useRevealAnimation(revealRequested)
+  const showAnswer = answerVisible
   const [usedLifelines, setUsedLifelines] = useState(initialLifelines)
   const [openMoreReduction, setOpenMoreReduction] = useState(0)
   const [lifelineMessage, setLifelineMessage] = useState(null)
@@ -71,13 +75,13 @@ export default function TosakanthPlayPage() {
   }
 
   const resetRoundState = () => {
-    setShowAnswer(false)
+    setRevealRequested(false)
     setOpenMoreReduction(0)
     setLifelineMessage(null)
   }
 
   const handleReveal = () => {
-    setShowAnswer(true)
+    setRevealRequested(true)
     setLifelineMessage(null)
   }
 
@@ -103,7 +107,7 @@ export default function TosakanthPlayPage() {
   const isFirstRound = roundIndex === 0
 
   const useLifeline = (id) => {
-    if (showAnswer || usedLifelines[id]) {
+    if (revealRequested || usedLifelines[id]) {
       return
     }
 
@@ -159,7 +163,7 @@ export default function TosakanthPlayPage() {
                       isUsed ? 'tosa-lifeline-card--used' : ''
                     }`}
                     onClick={() => useLifeline(lifeline.id)}
-                    disabled={showAnswer || isUsed}
+                    disabled={revealRequested || isUsed}
                     aria-label={`${lifeline.label}${isUsed ? ' (ใช้แล้ว)' : ''}`}
                   >
                     <span className="tosa-lifeline-card__icon" aria-hidden="true">
@@ -197,7 +201,7 @@ export default function TosakanthPlayPage() {
                 <div className="tosa-panel__side tosa-panel__side--left" aria-hidden="true" />
                 <div className="tosa-panel__inner">
                   <div className="tosa-reveal" key={roundIndex}>
-                    {lifelineMessage && !showAnswer && (
+                    {lifelineMessage && !revealRequested && (
                       <div
                         className={`tosa-lifeline-banner tosa-lifeline-banner--${lifelineMessage.type}`}
                         role="status"
@@ -238,7 +242,16 @@ export default function TosakanthPlayPage() {
                 <div className="tosa-panel__side tosa-panel__side--right" aria-hidden="true" />
               </div>
 
-              {showAnswer && (
+              {revealRequested && (
+                <RevealOverlay
+                  label="เฉลย"
+                  text={currentRound.answer}
+                  visible={answerVisible}
+                  buildingStatus="กำลังเฉลย..."
+                />
+              )}
+
+              {answerVisible && (
                 <p className="tosa-answer-name" role="status" aria-live="polite">
                   {currentRound.answer}
                 </p>
@@ -257,7 +270,7 @@ export default function TosakanthPlayPage() {
                   type="button"
                   className="hint-btn hint-btn--gold tosa-actions__btn"
                   onClick={handleReveal}
-                  disabled={showAnswer}
+                  disabled={revealRequested}
                 >
                   เฉลย
                 </button>

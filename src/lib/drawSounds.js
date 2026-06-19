@@ -1,25 +1,4 @@
-let audioContext = null
-
-function getAudioContext() {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  const AudioCtx = window.AudioContext || window.webkitAudioContext
-  if (!AudioCtx) {
-    return null
-  }
-
-  if (!audioContext) {
-    audioContext = new AudioCtx()
-  }
-
-  if (audioContext.state === 'suspended') {
-    audioContext.resume().catch(() => {})
-  }
-
-  return audioContext
-}
+import { getAudioContext } from './gameSounds'
 
 export const DRAW_TIMING = {
   spinPhaseMs: 4200,

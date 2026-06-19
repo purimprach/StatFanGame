@@ -11,6 +11,7 @@ import {
   shouldSplitTrailingUnit,
   unitRevealShouldAnimate,
 } from '../data/siasaGameData'
+import { playRevealEmphasis, startRevealWait, stopRevealWait } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 import './SiasaGame.css'
@@ -43,6 +44,7 @@ export default function SiasaPlayPage() {
   const [secondsLeft, setSecondsLeft] = useState(TIMER_PHASES.compact.duration)
   const promptWrapRef = useRef(null)
   const promptRef = useRef(null)
+  const revealEmphasisPlayedRef = useRef(false)
 
   const currentRound = category?.rounds[roundIndex]
   const isExpandedLayout = usedHelpers.expand || showAnswer
@@ -59,6 +61,8 @@ export default function SiasaPlayPage() {
   useEffect(() => {
     if (!showAnswer) {
       setRevealedMarkCount(0)
+      stopRevealWait()
+      revealEmphasisPlayedRef.current = false
       return undefined
     }
 
@@ -66,6 +70,7 @@ export default function SiasaPlayPage() {
       return undefined
     }
 
+    startRevealWait()
     setRevealedMarkCount(0)
     let count = 0
 
@@ -78,8 +83,23 @@ export default function SiasaPlayPage() {
       }
     }, REVEAL_INTERVAL_MS)
 
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearInterval(timer)
+      stopRevealWait()
+    }
   }, [showAnswer, roundIndex, revealSequence.length])
+
+  useEffect(() => {
+    if (!showAnswer || revealSequence.length === 0) {
+      return
+    }
+
+    if (revealedMarkCount >= revealSequence.length && !revealEmphasisPlayedRef.current) {
+      revealEmphasisPlayedRef.current = true
+      stopRevealWait()
+      playRevealEmphasis()
+    }
+  }, [showAnswer, revealedMarkCount, revealSequence.length])
 
   useEffect(() => {
     if (showAnswer) {
