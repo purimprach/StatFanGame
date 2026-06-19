@@ -1,5 +1,7 @@
-import { hintCategories } from '../data/hintGameData'
+import { hintCategories, getHintQuestionKey } from '../data/hintGameData'
 import { puzzleCategories } from '../data/puzzleGameData'
+import { siasaCategories } from '../data/siasaGameData'
+import { tosakanthCategories } from '../data/tosakanthGameData'
 import { ANSWER_KEY } from '../data/answerKey'
 import './StaffAnswerSheetPage.css'
 
@@ -35,12 +37,24 @@ export default function StaffAnswerSheetPage() {
               <th>แอดมินดูคำตอบ</th>
               <td>{SITE_URL}/admin-answers</td>
             </tr>
+            <tr>
+              <th>สุ่มรายชื่อนิสิต</th>
+              <td>{SITE_URL}/random/students</td>
+            </tr>
+            <tr>
+              <th>สุ่มรายชื่ออาจารย์</th>
+              <td>{SITE_URL}/random/teachers</td>
+            </tr>
+            <tr>
+              <th>เอกสารนี้</th>
+              <td>{SITE_URL}/staff-answers</td>
+            </tr>
           </tbody>
         </table>
       </section>
 
       <section className="staff-sheet__section">
-        <h2>ขั้นตอนรัน (จิ๊กซอว์ / คำใบ้)</h2>
+        <h2>ขั้นตอนรัน (จิ๊กซอว์ / คำใบ้ — มีมือถือ)</h2>
         <ol className="staff-sheet__steps">
           <li>
             <strong>MC</strong> เลือกเกม/ข้อ → กด <strong>「เริ่มเกม」</strong> (รอข้อความ
@@ -64,6 +78,39 @@ export default function StaffAnswerSheetPage() {
           คอลัมน์「ถูก/ผิด」ในแอดมินใช้แค่ช่วยดู — <strong>ให้แอดมินตัดสินผู้ชนะเอง</strong>{' '}
           (สะกดผิด/ชื่อเล่นก็เลือกได้)
         </p>
+      </section>
+
+      <section className="staff-sheet__section">
+        <h2>ขั้นตอนรัน (เกมทศกันณ์ — ไม่มีมือถือ)</h2>
+        <ol className="staff-sheet__steps">
+          <li>
+            <strong>MC</strong> เลือกหมวด A / B / C → ทายจากครึ่งหน้าที่ปิด
+          </li>
+          <li>
+            ตัวช่วยใช้ได้ครั้งละ 1 ต่อรอบ: <strong>ถามเพื่อน</strong> ·{' '}
+            <strong>คำใบ้</strong> · <strong>เปิดเพิ่ม</strong>
+          </li>
+          <li>
+            <strong>MC</strong> กด <strong>「เฉลย」</strong> หรือรอจบรอบ → กด{' '}
+            <strong>「ข้าม」</strong> / <strong>「ย้อนกลับ」</strong>
+          </li>
+        </ol>
+      </section>
+
+      <section className="staff-sheet__section">
+        <h2>ขั้นตอนรัน (เกมเสียสระ — ไม่มีมือถือ)</h2>
+        <ol className="staff-sheet__steps">
+          <li>
+            <strong>MC</strong> เลือกหมวด → แสดงคำแบบ compact (พยางชนะ)
+          </li>
+          <li>
+            นับถอยหลังอัตโนมัติ: <strong>10 วินาที</strong> compact →{' '}
+            <strong>7 วินาที</strong> ขยายพยางค์ → <strong>5 วินาที</strong> คำใบ้ → เฉลยเอง
+          </li>
+          <li>
+            ปุ่ม MC: <strong>「เฉลยทันที」</strong> · <strong>「ข้าม」</strong>
+          </li>
+        </ol>
       </section>
 
       <section className="staff-sheet__section">
@@ -92,25 +139,80 @@ export default function StaffAnswerSheetPage() {
 
       <section className="staff-sheet__section">
         <h2>เกมเปิดคำใบ้</h2>
-        {hintCategories.map((category, index) => (
-          <article key={category.id} className="staff-sheet__hint-block">
-            <h3>
-              {category.name}{' '}
-              <span className="staff-sheet__hint-key">(key {index + 1})</span>
-            </h3>
-            <p>
-              <strong>เฉลย:</strong> {category.answer}
-            </p>
-            <p>
-              <strong>มือถือรับ:</strong>{' '}
-              {ANSWER_KEY.hint[String(index + 1)].join(' · ')}
-            </p>
-            <p>
-              <strong>คำใบ้:</strong> {category.hints.join(' → ')}
-            </p>
-          </article>
-        ))}
+        {hintCategories.map((category) => {
+          const questionKey = getHintQuestionKey(category.id)
+          const mobileAnswers = questionKey ? ANSWER_KEY.hint[questionKey] : []
+
+          return (
+            <article key={category.id} className="staff-sheet__hint-block">
+              <h3>{category.name}</h3>
+              <p>
+                <strong>เฉลย:</strong> {category.answer}
+              </p>
+              <p>
+                <strong>มือถือรับ:</strong> {mobileAnswers.join(' · ')}
+              </p>
+              <p>
+                <strong>คำใบ้:</strong> {category.hints.join(' → ')}
+              </p>
+            </article>
+          )
+        })}
       </section>
+
+      {tosakanthCategories.map((category) => (
+        <section key={category.id} className="staff-sheet__section">
+          <h2>เกมทศกันณ์ · หมวด {category.name}</h2>
+          <table className="staff-sheet__table staff-sheet__table--answers">
+            <thead>
+              <tr>
+                <th>รอบ</th>
+                <th>เฉลย (กดเฉลย)</th>
+                <th>คำใบ้ (กดคำใบ้)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {category.rounds.map((round, index) => (
+                <tr key={`${category.id}-${index + 1}`}>
+                  <td>{String(index + 1).padStart(2, '0')}</td>
+                  <td>
+                    <strong>{round.answer}</strong>
+                  </td>
+                  <td>{round.hint ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+
+      {siasaCategories.map((category) => (
+        <section key={category.id} className="staff-sheet__section">
+          <h2>เกมเสียสระ · หมวด {category.name}</h2>
+          <table className="staff-sheet__table staff-sheet__table--answers">
+            <thead>
+              <tr>
+                <th>รอบ</th>
+                <th>พยางค์เริ่ม (compact)</th>
+                <th>เฉลย</th>
+                <th>คำใบ้</th>
+              </tr>
+            </thead>
+            <tbody>
+              {category.rounds.map((round, index) => (
+                <tr key={`${category.id}-${index + 1}`}>
+                  <td>{String(index + 1).padStart(2, '0')}</td>
+                  <td>{round.prompt}</td>
+                  <td>
+                    <strong>{round.answer}</strong>
+                  </td>
+                  <td>{round.hint ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
 
       <section className="staff-sheet__section staff-sheet__section--prize">
         <h2>รางวัลอาจารย์มางานคนแรก (กรอกวันงาน)</h2>
