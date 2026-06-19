@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
 import QrJoinModal from '../components/QrJoinModal'
+import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
 import '../App.css'
 
 const games = [
@@ -64,6 +65,7 @@ function GameCard({ game, onPlay }) {
 export default function HomePage() {
   const navigate = useNavigate()
   const [showQr, setShowQr] = useState(false)
+  useClearActiveQuestion()
 
   const handlePlay = (game) => {
     if (game.path) {
@@ -77,7 +79,7 @@ export default function HomePage() {
 
       <main className="landing__content">
         <header className="landing__header">
-          <p className="landing__badge">STAT#55 Reunion Game Show 2026</p>
+          <p className="landing__badge">STAT#55 Bye Nior Game Show 2026</p>
           <h1 className="landing__title">
             <span className="landing__title-line">แฟนพันธุ์แท้</span>
             <span className="landing__title-accent">STAT#55</span>

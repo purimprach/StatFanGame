@@ -108,3 +108,8 @@ export const hintCategories = [
 export function getCategoryById(id) {
   return hintCategories.find((category) => category.id === id)
 }
+
+export function getHintQuestionKey(categoryId) {
+  const index = hintCategories.findIndex((category) => category.id === categoryId)
+  return index >= 0 ? String(index + 1) : null
+}

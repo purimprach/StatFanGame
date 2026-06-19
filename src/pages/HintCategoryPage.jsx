@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
 import { hintCategories } from '../data/hintGameData'
 import '../App.css'
 import './HintGame.css'
 
 export default function HintCategoryPage() {
   const navigate = useNavigate()
+  useClearActiveQuestion()
 
   return (
     <div className="landing landing--scroll">

@@ -1,9 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
-import { getCategoryById } from '../data/hintGameData'
+import RevealOverlay from '../components/RevealOverlay'
+import { useRevealAnimation } from '../hooks/useRevealAnimation'
+import { useBroadcastActiveQuestion } from '../hooks/useActiveQuestion'
+import { fetchFastestCorrectAnswer } from '../lib/answersApi'
+import { getCategoryById, getHintQuestionKey } from '../data/hintGameData'
+import { getQuestionLabel } from '../data/questions'
 import '../App.css'
 import './HintGame.css'
+
+function formatWinnerName(winner) {
+  if (!winner) {
+    return 'ยังไม่มีผู้ตอบถูก'
+  }
+
+  return winner.branch ? `${winner.playerName} · ${winner.branch}` : winner.playerName
+}
 
 export default function HintPlayPage() {
   const { categoryId } = useParams()
@@ -11,23 +24,20 @@ export default function HintPlayPage() {
   const category = getCategoryById(categoryId)
   const [openedHints, setOpenedHints] = useState(() => new Set())
   const [showAnswer, setShowAnswer] = useState(false)
-  const [answerVisible, setAnswerVisible] = useState(false)
+  const [showWinner, setShowWinner] = useState(false)
+  const [winnerData, setWinnerData] = useState(null)
+  const [loadingWinner, setLoadingWinner] = useState(false)
 
-  useEffect(() => {
-    if (!showAnswer) {
-      setAnswerVisible(false)
-      return undefined
-    }
+  const hintQuestionKey = category ? getHintQuestionKey(category.id) : null
 
-    setAnswerVisible(false)
-    const timer = window.setTimeout(() => setAnswerVisible(true), 3000)
-    return () => window.clearTimeout(timer)
-  }, [showAnswer])
+  useBroadcastActiveQuestion(
+    hintQuestionKey ? 'hint' : null,
+    hintQuestionKey,
+    hintQuestionKey ? getQuestionLabel('hint', hintQuestionKey) : null,
+  )
 
-  const closeAnswer = () => {
-    setShowAnswer(false)
-    setAnswerVisible(false)
-  }
+  const answerVisible = useRevealAnimation(showAnswer)
+  const winnerVisible = useRevealAnimation(showWinner)
 
   if (!category) {
     return (
@@ -59,6 +69,40 @@ export default function HintPlayPage() {
     })
   }
 
+  const closeAnswer = () => {
+    setShowAnswer(false)
+    setShowWinner(false)
+    setWinnerData(null)
+  }
+
+  const handleShowWinner = async () => {
+    if (showWinner) {
+      setShowWinner(false)
+      setWinnerData(null)
+      return
+    }
+
+    const questionKey = getHintQuestionKey(category.id)
+    if (!questionKey) {
+      return
+    }
+
+    setLoadingWinner(true)
+    try {
+      const winner = await fetchFastestCorrectAnswer({
+        gameType: 'hint',
+        questionKey,
+      })
+      setWinnerData(winner)
+      setShowWinner(true)
+    } catch {
+      setWinnerData(null)
+      setShowWinner(true)
+    } finally {
+      setLoadingWinner(false)
+    }
+  }
+
   return (
     <div className="landing landing--scroll">
       <PageBackground />
@@ -72,22 +116,42 @@ export default function HintPlayPage() {
           >
             ← กลับไปเลือกหมวด
           </button>
-          <button
-            type="button"
-            className={
-              showAnswer ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
-            }
-            onClick={() => (showAnswer ? closeAnswer() : setShowAnswer(true))}
-          >
-            {showAnswer ? 'กลับไปเปิดคำใบ้' : 'เฉลยคำตอบ'}
-          </button>
+          <div className="hint-play-toolbar__actions">
+            {showAnswer && (
+              <button
+                type="button"
+                className={
+                  showWinner ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
+                }
+                onClick={handleShowWinner}
+                disabled={loadingWinner}
+              >
+                {loadingWinner
+                  ? 'กำลังโหลด...'
+                  : showWinner
+                    ? 'ปิดผู้ชนะ'
+                    : 'คนตอบถูกเร็วที่สุด'}
+              </button>
+            )}
+            <button
+              type="button"
+              className={
+                showAnswer ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
+              }
+              onClick={() => (showAnswer ? closeAnswer() : setShowAnswer(true))}
+            >
+              {showAnswer ? 'กลับไปเปิดคำใบ้' : 'เฉลยคำตอบ'}
+            </button>
+          </div>
         </div>
 
         <header className="hint-page__header">
           <h1 className="hint-page__title">{category.name}</h1>
         </header>
 
-        <div className={`hint-play-stage ${showAnswer ? 'hint-play-stage--revealed' : ''}`}>
+        <div
+          className={`hint-play-stage ${showAnswer || showWinner ? 'hint-play-stage--revealed' : ''}`}
+        >
           <div className="hint-panel">
             <div className="hint-panel__side hint-panel__side--left" aria-hidden="true" />
             <div className="hint-panel__inner">
@@ -128,30 +192,20 @@ export default function HintPlayPage() {
           </div>
 
           {showAnswer && (
-            <div className="answer-overlay" role="status" aria-live="polite">
-              <div
-                className={`answer-reveal ${
-                  answerVisible ? 'answer-reveal--shown' : 'answer-reveal--building'
-                }`}
-              >
-                {answerVisible ? (
-                  <>
-                    <span className="answer-reveal__label">คำตอบ</span>
-                    <span className="answer-reveal__text">{category.answer}</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="answer-buildup" aria-hidden="true">
-                      <span className="answer-buildup__ring" />
-                      <span className="answer-buildup__ring answer-buildup__ring--delay" />
-                      <span className="answer-buildup__core" />
-                    </div>
-                    <span className="answer-reveal__label">คำตอบ</span>
-                    <span className="answer-buildup__status">กำลังเฉลย...</span>
-                  </>
-                )}
-              </div>
-            </div>
+            <RevealOverlay
+              label="คำตอบ"
+              text={category.answer}
+              visible={answerVisible}
+            />
+          )}
+
+          {showWinner && (
+            <RevealOverlay
+              label="คนตอบถูกเร็วที่สุด"
+              text={formatWinnerName(winnerData)}
+              buildingStatus="กำลังประกาศ..."
+              visible={winnerVisible}
+            />
           )}
         </div>
       </main>

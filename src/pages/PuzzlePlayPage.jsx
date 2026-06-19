@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import RevealOverlay from '../components/RevealOverlay'
+import { useRevealAnimation } from '../hooks/useRevealAnimation'
+import { useBroadcastActiveQuestion } from '../hooks/useActiveQuestion'
+import { fetchFastestCorrectAnswer } from '../lib/answersApi'
 import {
   getPuzzleCategoryById,
   getTileBackgroundPosition,
@@ -11,24 +15,32 @@ import '../App.css'
 import './HintGame.css'
 import './PuzzleGame.css'
 
+function formatWinnerName(winner) {
+  if (!winner) {
+    return 'ยังไม่มีผู้ตอบถูก'
+  }
+
+  return winner.branch ? `${winner.playerName} · ${winner.branch}` : winner.playerName
+}
+
 export default function PuzzlePlayPage() {
   const { categoryId } = useParams()
   const navigate = useNavigate()
   const category = getPuzzleCategoryById(categoryId)
   const [openedTiles, setOpenedTiles] = useState(() => new Set())
   const [showAnswer, setShowAnswer] = useState(false)
-  const [answerVisible, setAnswerVisible] = useState(false)
+  const [showWinner, setShowWinner] = useState(false)
+  const [winnerData, setWinnerData] = useState(null)
+  const [loadingWinner, setLoadingWinner] = useState(false)
 
-  useEffect(() => {
-    if (!showAnswer) {
-      setAnswerVisible(false)
-      return undefined
-    }
+  useBroadcastActiveQuestion(
+    category?.name ? 'jigsaw' : null,
+    category?.name ?? null,
+    category ? `จิ๊กซอว์ ${category.name}` : null,
+  )
 
-    setAnswerVisible(false)
-    const timer = window.setTimeout(() => setAnswerVisible(true), 3000)
-    return () => window.clearTimeout(timer)
-  }, [showAnswer])
+  const answerVisible = useRevealAnimation(showAnswer)
+  const winnerVisible = useRevealAnimation(showWinner)
 
   if (!category || !category.image) {
     return (
@@ -62,7 +74,31 @@ export default function PuzzlePlayPage() {
 
   const closeAnswer = () => {
     setShowAnswer(false)
-    setAnswerVisible(false)
+    setShowWinner(false)
+    setWinnerData(null)
+  }
+
+  const handleShowWinner = async () => {
+    if (showWinner) {
+      setShowWinner(false)
+      setWinnerData(null)
+      return
+    }
+
+    setLoadingWinner(true)
+    try {
+      const winner = await fetchFastestCorrectAnswer({
+        gameType: 'jigsaw',
+        questionKey: category.name,
+      })
+      setWinnerData(winner)
+      setShowWinner(true)
+    } catch {
+      setWinnerData(null)
+      setShowWinner(true)
+    } finally {
+      setLoadingWinner(false)
+    }
   }
 
   const openedCount = openedTiles.size
@@ -80,15 +116,33 @@ export default function PuzzlePlayPage() {
           >
             ← กลับไปเลือกภาพ
           </button>
-          <button
-            type="button"
-            className={
-              showAnswer ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
-            }
-            onClick={() => (showAnswer ? closeAnswer() : setShowAnswer(true))}
-          >
-            {showAnswer ? 'กลับไปเปิดการ์ด' : 'เฉลยคำตอบ'}
-          </button>
+          <div className="hint-play-toolbar__actions">
+            {showAnswer && (
+              <button
+                type="button"
+                className={
+                  showWinner ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
+                }
+                onClick={handleShowWinner}
+                disabled={loadingWinner}
+              >
+                {loadingWinner
+                  ? 'กำลังโหลด...'
+                  : showWinner
+                    ? 'ปิดผู้ชนะ'
+                    : 'คนตอบถูกเร็วที่สุด'}
+              </button>
+            )}
+            <button
+              type="button"
+              className={
+                showAnswer ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
+              }
+              onClick={() => (showAnswer ? closeAnswer() : setShowAnswer(true))}
+            >
+              {showAnswer ? 'กลับไปเปิดการ์ด' : 'เฉลยคำตอบ'}
+            </button>
+          </div>
         </div>
 
         <header className="hint-page__header">
@@ -96,7 +150,9 @@ export default function PuzzlePlayPage() {
           <p className="puzzle-progress">เปิดแล้ว {openedCount}/{PUZZLE_TILE_COUNT}</p>
         </header>
 
-        <div className={`puzzle-stage ${showAnswer ? 'puzzle-stage--revealed' : ''}`}>
+        <div
+          className={`puzzle-stage ${showAnswer || showWinner ? 'puzzle-stage--revealed' : ''}`}
+        >
           <div className="puzzle-panel">
             <div className="puzzle-panel__side puzzle-panel__side--left" aria-hidden="true" />
             <div className="puzzle-panel__inner">
@@ -146,30 +202,20 @@ export default function PuzzlePlayPage() {
           </div>
 
           {showAnswer && (
-            <div className="answer-overlay" role="status" aria-live="polite">
-              <div
-                className={`answer-reveal ${
-                  answerVisible ? 'answer-reveal--shown' : 'answer-reveal--building'
-                }`}
-              >
-                {answerVisible ? (
-                  <>
-                    <span className="answer-reveal__label">คำตอบ</span>
-                    <span className="answer-reveal__text">{category.answer}</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="answer-buildup" aria-hidden="true">
-                      <span className="answer-buildup__ring" />
-                      <span className="answer-buildup__ring answer-buildup__ring--delay" />
-                      <span className="answer-buildup__core" />
-                    </div>
-                    <span className="answer-reveal__label">คำตอบ</span>
-                    <span className="answer-buildup__status">กำลังเฉลย...</span>
-                  </>
-                )}
-              </div>
-            </div>
+            <RevealOverlay
+              label="คำตอบ"
+              text={category.answer}
+              visible={answerVisible}
+            />
+          )}
+
+          {showWinner && (
+            <RevealOverlay
+              label="คนตอบถูกเร็วที่สุด"
+              text={formatWinnerName(winnerData)}
+              buildingStatus="กำลังประกาศ..."
+              visible={winnerVisible}
+            />
           )}
         </div>
       </main>

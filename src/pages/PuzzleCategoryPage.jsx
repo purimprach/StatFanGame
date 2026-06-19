@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
 import { puzzleCategories } from '../data/puzzleGameData'
 import '../App.css'
 import './HintGame.css'
@@ -7,6 +8,7 @@ import './PuzzleGame.css'
 
 export default function PuzzleCategoryPage() {
   const navigate = useNavigate()
+  useClearActiveQuestion()
 
   return (
     <div className="landing landing--scroll">

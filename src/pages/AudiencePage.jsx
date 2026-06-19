@@ -6,12 +6,12 @@ import {
 } from '../lib/answersApi'
 import { getPlayerProfile, savePlayerProfile } from '../lib/playerStorage'
 import { getSubmission, saveSubmission } from '../lib/playerSubmissions'
+import { useSyncedActiveQuestion } from '../hooks/useSyncedActiveQuestion'
 import {
   BRANCH_OPTIONS,
   getQuestionLabel,
   getQuestionValue,
   parseQuestionValue,
-  QUESTION_OPTIONS,
 } from '../data/questions'
 import './AudiencePage.css'
 
@@ -27,16 +27,26 @@ export default function AudiencePage() {
   const [name, setName] = useState('')
   const [branch, setBranch] = useState(BRANCH_OPTIONS[0])
   const [customBranch, setCustomBranch] = useState('')
-  const [questionValue, setQuestionValue] = useState(
-    getQuestionValue(QUESTION_OPTIONS[0].gameType, QUESTION_OPTIONS[0].questionKey),
-  )
+  const [questionValue, setQuestionValue] = useState('')
   const [answerText, setAnswerText] = useState('')
   const [submission, setSubmission] = useState(null)
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const { activeQuestion, ready, syncAvailable } = useSyncedActiveQuestion()
 
-  const { gameType, questionKey } = parseQuestionValue(questionValue)
+  const { gameType, questionKey } = parseQuestionValue(questionValue || 'unknown:unknown')
+  const hasActiveQuestion = Boolean(activeQuestion?.gameType && activeQuestion?.questionKey)
   const isLocked = Boolean(submission) || status === 'submitted'
+
+  useEffect(() => {
+    if (activeQuestion?.gameType && activeQuestion?.questionKey) {
+      setQuestionValue(
+        getQuestionValue(activeQuestion.gameType, activeQuestion.questionKey),
+      )
+    } else {
+      setQuestionValue('')
+    }
+  }, [activeQuestion])
 
   useEffect(() => {
     if (profile) {
@@ -49,6 +59,14 @@ export default function AudiencePage() {
   }, [profile])
 
   useEffect(() => {
+    if (!hasActiveQuestion) {
+      setSubmission(null)
+      setAnswerText('')
+      setStatus('idle')
+      setErrorMessage('')
+      return undefined
+    }
+
     setErrorMessage('')
 
     const localSubmission = getSubmission(gameType, questionKey)
@@ -107,7 +125,7 @@ export default function AudiencePage() {
     return () => {
       cancelled = true
     }
-  }, [profile, gameType, questionKey])
+  }, [profile, gameType, questionKey, hasActiveQuestion])
 
   const resolvedBranch = branch === 'อื่นๆ' ? customBranch.trim() : branch
 
@@ -132,7 +150,7 @@ export default function AudiencePage() {
   const handleSubmitAnswer = async (event) => {
     event.preventDefault()
 
-    if (isLocked) {
+    if (!hasActiveQuestion || isLocked) {
       return
     }
 
@@ -181,8 +199,11 @@ export default function AudiencePage() {
     <div className="audience-page">
       {demoMode && (
         <p className="audience-demo-banner">
-          โหมดทดสอบ — ยังไม่มี Supabase คำตอบเก็บในเครื่องนี้เท่านั้น
+          โหมดทดสอบ — ซิงก์จอเวทีใช้ได้แค่แท็บเดียวกัน ตั้ง Supabase เพื่อใช้กับมือถือจริง
         </p>
+      )}
+      {!demoMode && syncAvailable && (
+        <p className="audience-sync-banner">เชื่อมกับจอเวทีแล้ว — ข้อจะเปลี่ยนตามเกมที่ MC เปิด</p>
       )}
       <header className="audience-header">
         <p className="audience-badge">STAT#55 · Audience Answer</p>
@@ -255,24 +276,24 @@ export default function AudiencePage() {
           </div>
 
           <form className="audience-card" onSubmit={handleSubmitAnswer}>
-            <label className="audience-field">
-              <span>เกม / ข้อ</span>
-              <select
-                value={questionValue}
-                onChange={(e) => setQuestionValue(e.target.value)}
-                disabled={status === 'loading'}
-              >
-                {QUESTION_OPTIONS.map((option) => (
-                  <option
-                    key={getQuestionValue(option.gameType, option.questionKey)}
-                    value={getQuestionValue(option.gameType, option.questionKey)}
-                  >
-                    {option.label}
-                    {getSubmission(option.gameType, option.questionKey) ? ' ✓' : ''}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!ready ? (
+              <p className="audience-waiting">กำลังเชื่อมกับจอเวที...</p>
+            ) : hasActiveQuestion ? (
+              <div className="audience-live-question">
+                <span className="audience-live-question__label">เกมปัจจุบัน (ตามจอเวที)</span>
+                <strong className="audience-live-question__value">
+                  {activeQuestion.label ||
+                    getQuestionLabel(activeQuestion.gameType, activeQuestion.questionKey)}
+                </strong>
+              </div>
+            ) : (
+              <div className="audience-waiting audience-waiting--card">
+                <p className="audience-waiting__title">รอ MC เปิดเกมบนเวที</p>
+                <p className="audience-waiting__text">
+                  เมื่อเปิดจิ๊กซอว์หรือคำใบ้บนจอใหญ่ ข้อนี้จะเปลี่ยนอัตโนมัติ
+                </p>
+              </div>
+            )}
 
             <label className="audience-field">
               <span>คำตอบของคุณ</span>
@@ -280,11 +301,15 @@ export default function AudiencePage() {
                 type="text"
                 value={answerText}
                 onChange={(e) => setAnswerText(e.target.value)}
-                placeholder="พิมพ์คำตอบตามที่เห็นบนเวที"
+                placeholder={
+                  hasActiveQuestion
+                    ? 'พิมพ์คำตอบตามที่เห็นบนเวที'
+                    : 'รอ MC เปิดเกมก่อน'
+                }
                 autoComplete="off"
                 maxLength={200}
                 readOnly={isLocked}
-                disabled={status === 'loading'}
+                disabled={!hasActiveQuestion || status === 'loading'}
                 className={isLocked ? 'audience-input--locked' : undefined}
               />
             </label>
@@ -312,7 +337,12 @@ export default function AudiencePage() {
             <button
               type="submit"
               className="audience-btn audience-btn--primary"
-              disabled={isLocked || status === 'submitting' || status === 'loading'}
+              disabled={
+                !hasActiveQuestion ||
+                isLocked ||
+                status === 'submitting' ||
+                status === 'loading'
+              }
             >
               {status === 'submitting'
                 ? 'กำลังส่ง...'
@@ -324,7 +354,7 @@ export default function AudiencePage() {
             </button>
 
             <p className="audience-note">
-              ส่งได้ครั้งเดียวต่อข้อ — เลือกเกม/ข้ออื่นในรายการด้านบนเพื่อส่งคำตอบรอบถัดไป
+              ส่งได้ครั้งเดียวต่อข้อ — เมื่อ MC เปิดรอบใหม่บนเวที ข้อจะเปลี่ยนให้อัตโนมัติ
             </p>
           </form>
         </>

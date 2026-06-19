@@ -138,3 +138,29 @@ export function sortAnswers(rows) {
     return new Date(b.submitted_at) - new Date(a.submitted_at)
   })
 }
+
+export async function fetchFastestCorrectAnswer({ gameType, questionKey }) {
+  const rows = await fetchAllAnswers()
+  const correctAnswers = rows.filter(
+    (row) =>
+      row.game_type === gameType &&
+      row.question_key === questionKey &&
+      row.is_correct,
+  )
+
+  if (correctAnswers.length === 0) {
+    return null
+  }
+
+  correctAnswers.sort(
+    (a, b) => new Date(a.submitted_at) - new Date(b.submitted_at),
+  )
+
+  const fastest = correctAnswers[0]
+
+  return {
+    playerName: fastest.player_name,
+    branch: fastest.branch,
+    submittedAt: fastest.submitted_at,
+  }
+}
