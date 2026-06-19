@@ -41,7 +41,7 @@ export default function AudiencePage() {
   const [submissions, setSubmissions] = useState([])
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
-  const { activeQuestion, ready, syncAvailable } = useSyncedActiveQuestion()
+  const { activeQuestion, ready } = useSyncedActiveQuestion()
 
   const { gameType, questionKey } = parseQuestionValue(questionValue || 'unknown:unknown')
   const hasActiveQuestion = Boolean(activeQuestion?.gameType && activeQuestion?.questionKey)
@@ -171,11 +171,6 @@ export default function AudiencePage() {
             — ตอนนี้ใช้ได้แค่ทดสอบ 2 แท็บในเบราว์เซอร์เครื่องเดียวกัน
           </p>
         </div>
-      )}
-      {!demoMode && syncAvailable && (
-        <p className="audience-sync-banner">
-          เชื่อมกับจอเวทีแล้ว — ข้อและคำตอบอิงจากฐานข้อมูล
-        </p>
       )}
       <header className="audience-header">
         <p className="audience-badge">STAT#55 · Audience Answer</p>
