@@ -1,16 +1,18 @@
-export const QUESTION_OPTIONS = [
+import { hintCategories } from './hintGameData'
+
+const JIGSAW_QUESTION_OPTIONS = [
   { gameType: 'jigsaw', questionKey: 'A', label: 'จิ๊กซอว์ A' },
   { gameType: 'jigsaw', questionKey: 'B', label: 'จิ๊กซอว์ B' },
   { gameType: 'jigsaw', questionKey: 'C', label: 'จิ๊กซอว์ C' },
-  { gameType: 'hint', questionKey: '1', label: 'คำใบ้ 1' },
-  { gameType: 'hint', questionKey: '2', label: 'คำใบ้ 2' },
-  { gameType: 'hint', questionKey: '3', label: 'คำใบ้ 3' },
-  { gameType: 'hint', questionKey: '4', label: 'คำใบ้ 4' },
-  { gameType: 'hint', questionKey: '5', label: 'คำใบ้ 5' },
-  { gameType: 'hint', questionKey: '6', label: 'คำใบ้ 6' },
-  { gameType: 'hint', questionKey: '7', label: 'คำใบ้ 7' },
-  { gameType: 'hint', questionKey: '8', label: 'คำใบ้ 8' },
 ]
+
+const HINT_QUESTION_OPTIONS = hintCategories.map((category, index) => ({
+  gameType: 'hint',
+  questionKey: String(index + 1),
+  label: category.name,
+}))
+
+export const QUESTION_OPTIONS = [...JIGSAW_QUESTION_OPTIONS, ...HINT_QUESTION_OPTIONS]
 
 export const BRANCH_OPTIONS = ['BIT', 'INS', 'STAT']
 
