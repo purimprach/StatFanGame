@@ -11,7 +11,7 @@ import {
   shouldSplitTrailingUnit,
   unitRevealShouldAnimate,
 } from '../data/siasaGameData'
-import { playRevealEmphasis, startRevealWait, stopRevealWait } from '../lib/gameSounds'
+import { playRevealEmphasis, playSiasaCountdownTick, playSiasaPhaseChange, startRevealWait, stopRevealWait } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 import './SiasaGame.css'
@@ -114,6 +114,7 @@ export default function SiasaPlayPage() {
     setSecondsLeft(remaining)
     setUsedHelpers(initialHelpers())
     setExpandComplete(false)
+    playSiasaPhaseChange('compact')
 
     const id = window.setInterval(() => {
       if (cancelled) {
@@ -124,6 +125,7 @@ export default function SiasaPlayPage() {
       setSecondsLeft(remaining)
 
       if (remaining > 0) {
+        playSiasaCountdownTick(phase, remaining, TIMER_PHASES[phase].duration)
         return
       }
 
@@ -133,6 +135,8 @@ export default function SiasaPlayPage() {
         setTimerPhase('expand')
         setSecondsLeft(remaining)
         setUsedHelpers((prev) => ({ ...prev, expand: true }))
+        playSiasaPhaseChange('expand')
+        playSiasaCountdownTick('expand', remaining, TIMER_PHASES.expand.duration)
         return
       }
 
@@ -142,6 +146,8 @@ export default function SiasaPlayPage() {
         setTimerPhase('hint')
         setSecondsLeft(remaining)
         setUsedHelpers((prev) => ({ ...prev, hint: true }))
+        playSiasaPhaseChange('hint')
+        playSiasaCountdownTick('hint', remaining, TIMER_PHASES.hint.duration)
         return
       }
 

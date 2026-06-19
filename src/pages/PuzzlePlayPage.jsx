@@ -12,6 +12,7 @@ import {
   PUZZLE_GRID_SIZE,
   PUZZLE_TILE_COUNT,
 } from '../data/puzzleGameData'
+import { playPuzzleTileFlip } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 import './PuzzleGame.css'
@@ -67,9 +68,12 @@ export default function PuzzlePlayPage() {
   }
 
   const toggleTile = (index) => {
-    if (!gameStarted) {
+    if (!gameStarted || showAnswer) {
       return
     }
+
+    const isOpen = openedTiles.has(index)
+    playPuzzleTileFlip(!isOpen)
 
     setOpenedTiles((prev) => {
       const next = new Set(prev)
@@ -205,6 +209,7 @@ export default function PuzzlePlayPage() {
                         onClick={() => toggleTile(index)}
                         aria-expanded={isOpen}
                         disabled={interactionsLocked}
+                        data-ui-click="off"
                         aria-label={
                           isOpen ? `ปิดการ์ด ${index + 1}` : `เปิดการ์ด ${index + 1}`
                         }

@@ -8,6 +8,7 @@ import { useBroadcastActiveQuestion, usePreparePlayPage, startLiveQuestion } fro
 import { fetchDeclaredWinner } from '../lib/winnerSelection'
 import { getCategoryById, getHintQuestionKey } from '../data/hintGameData'
 import { getQuestionLabel } from '../data/questions'
+import { playHintReveal } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 
@@ -64,9 +65,12 @@ export default function HintPlayPage() {
   }
 
   const toggleHint = (index) => {
-    if (!gameStarted) {
+    if (!gameStarted || showAnswer) {
       return
     }
+
+    const isOpen = openedHints.has(index)
+    playHintReveal(!isOpen)
 
     setOpenedHints((prev) => {
       const next = new Set(prev)
@@ -205,6 +209,7 @@ export default function HintPlayPage() {
                         onClick={() => toggleHint(index)}
                         aria-expanded={isOpen}
                         disabled={interactionsLocked}
+                        data-ui-click="off"
                         aria-label={
                           isOpen
                             ? `ปิดคำใบ้ ${index + 1}: ${hint}`
