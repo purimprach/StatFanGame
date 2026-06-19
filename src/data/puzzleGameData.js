@@ -29,7 +29,7 @@ export const puzzleCategories = [
     name: 'C',
     label: 'ภาพ C',
     image: puzzleC,
-    aspectRatio: 644 / 994,
+    aspectRatio: 710 / 1024,
     answer: 'รศ. ดร.จันทร์เจ้า มงคลนาวิน',
     available: true,
   },
