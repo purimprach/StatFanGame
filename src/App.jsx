@@ -10,6 +10,7 @@ import SiasaCategoryPage from './pages/SiasaCategoryPage'
 import SiasaPlayPage from './pages/SiasaPlayPage'
 import AudiencePage from './pages/AudiencePage'
 import AdminAnswersPage from './pages/AdminAnswersPage'
+import StaffAnswerSheetPage from './pages/StaffAnswerSheetPage'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/siasa/:categoryId" element={<SiasaPlayPage />} />
       <Route path="/audience" element={<AudiencePage />} />
       <Route path="/admin-answers" element={<AdminAnswersPage />} />
+      <Route path="/staff-answers" element={<StaffAnswerSheetPage />} />
     </Routes>
   )
 }

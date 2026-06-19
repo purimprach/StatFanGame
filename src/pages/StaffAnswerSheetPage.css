@@ -1,0 +1,144 @@
+.staff-sheet {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  color: #111827;
+  background: #fff;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.staff-sheet__header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #111827;
+}
+
+.staff-sheet__badge {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #92400e;
+}
+
+.staff-sheet__header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.staff-sheet__subtitle {
+  margin: 0.35rem 0 0.85rem;
+  color: #4b5563;
+}
+
+.staff-sheet__print {
+  padding: 0.55rem 1rem;
+  border: 1px solid #111827;
+  border-radius: 0.5rem;
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staff-sheet__section {
+  margin-bottom: 1.5rem;
+  break-inside: avoid;
+}
+
+.staff-sheet__section h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  border-left: 4px solid #111827;
+  padding-left: 0.55rem;
+}
+
+.staff-sheet__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.staff-sheet__steps li {
+  margin-bottom: 0.45rem;
+}
+
+.staff-sheet__note {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  font-size: 0.9rem;
+}
+
+.staff-sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.staff-sheet__table th,
+.staff-sheet__table td {
+  border: 1px solid #d1d5db;
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.staff-sheet__table th {
+  width: 8.5rem;
+  background: #f3f4f6;
+  white-space: nowrap;
+}
+
+.staff-sheet__table--answers th {
+  background: #111827;
+  color: #fff;
+}
+
+.staff-sheet__hint-block {
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  break-inside: avoid;
+}
+
+.staff-sheet__hint-block h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.staff-sheet__hint-block p {
+  margin: 0.2rem 0;
+}
+
+.staff-sheet__hint-key {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.staff-sheet__footer {
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #9ca3af;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+@media print {
+  .staff-sheet {
+    max-width: none;
+    padding: 0;
+  }
+
+  .staff-sheet__print {
+    display: none;
+  }
+
+  .staff-sheet__section {
+    page-break-inside: avoid;
+  }
+}
