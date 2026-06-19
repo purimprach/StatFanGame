@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
 import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
@@ -13,8 +13,20 @@ import '../App.css'
 import './HintGame.css'
 import './RandomDrawPage.css'
 
-const DRAW_TICK_MS = 85
-const DRAW_DURATION_MS = 2600
+const DRAW_DURATION_MS = 3200
+
+const STUDENT_DRAW_OPTIONS = [
+  ...BRANCH_OPTIONS.map((branch) => ({
+    id: branch,
+    label: `สุ่ม ${branch}`,
+    shortLabel: branch,
+  })),
+  {
+    id: 'all',
+    label: 'สุ่มรวมทุกสาขา',
+    shortLabel: 'รวม',
+  },
+]
 
 export default function RandomDrawPage() {
   const { mode } = useParams()
@@ -23,20 +35,24 @@ export default function RandomDrawPage() {
   const isTeacherMode = mode === 'teachers'
   const [drawLists, setDrawLists] = useState(null)
   const [isDrawing, setIsDrawing] = useState(false)
+  const [activeScope, setActiveScope] = useState(null)
   const [highlightKey, setHighlightKey] = useState(null)
+  const [spinningEntry, setSpinningEntry] = useState(null)
+  const [spinTick, setSpinTick] = useState(0)
   const [winner, setWinner] = useState(null)
   const drawTimerRef = useRef(null)
   useClearActiveQuestion()
 
   useEffect(() => subscribeDrawLists(setDrawLists), [])
 
-  useEffect(() => {
-    return () => {
-      if (drawTimerRef.current) {
-        window.clearInterval(drawTimerRef.current)
-      }
+  const clearDrawTimer = useCallback(() => {
+    if (drawTimerRef.current) {
+      window.clearTimeout(drawTimerRef.current)
+      drawTimerRef.current = null
     }
   }, [])
+
+  useEffect(() => clearDrawTimer, [clearDrawTimer])
 
   const studentsByBranch = drawLists?.students ?? null
   const teacherNames = drawLists?.teachers ?? []
@@ -46,46 +62,93 @@ export default function RandomDrawPage() {
     [studentsByBranch],
   )
 
-  const pool = isStudentMode ? studentEntries : teacherNames.map((name) => ({ name, branch: null }))
+  const teacherEntries = useMemo(
+    () => teacherNames.map((name) => ({ name, branch: null })),
+    [teacherNames],
+  )
+
   const totalCount = isStudentMode ? studentEntries.length : teacherNames.length
   const pageTitle = isStudentMode ? 'สุ่มรายชื่อนิสิต' : 'สุ่มรายชื่ออาจารย์'
   const pageSubtitle = isStudentMode
-    ? 'รายชื่อแยกตามสาขา BIT · INS · STAT'
+    ? 'เลือกสุ่มแยกสาขา หรือสุ่มรวมทุกสาขา'
     : 'รายชื่ออาจารย์ทั้งหมด'
 
-  const handleDraw = () => {
+  const getPool = useCallback(
+    (scope) => {
+      if (isTeacherMode) {
+        return teacherEntries
+      }
+
+      if (!studentsByBranch) {
+        return []
+      }
+
+      if (scope === 'all') {
+        return studentEntries
+      }
+
+      return (studentsByBranch[scope] ?? []).map((name) => ({ name, branch: scope }))
+    },
+    [isStudentMode, isTeacherMode, studentEntries, studentsByBranch, teacherEntries],
+  )
+
+  const getScopeCount = useCallback(
+    (scope) => getPool(scope).length,
+    [getPool],
+  )
+
+  const handleDraw = (scope) => {
+    const pool = getPool(scope)
     if (isDrawing || pool.length === 0) {
+      return
+    }
+
+    clearDrawTimer()
+    const finalWinner = pickRandomEntry(pool)
+    if (!finalWinner) {
       return
     }
 
     setWinner(null)
     setIsDrawing(true)
+    setActiveScope(scope)
     setHighlightKey(null)
+    setSpinningEntry(pickRandomEntry(pool))
+    setSpinTick(0)
 
     const startedAt = Date.now()
 
-    drawTimerRef.current = window.setInterval(() => {
-      const entry = pickRandomEntry(pool)
-      if (!entry) {
+    const tick = () => {
+      const elapsed = Date.now() - startedAt
+      const progress = Math.min(elapsed / DRAW_DURATION_MS, 1)
+
+      if (progress >= 1) {
+        setSpinningEntry(finalWinner)
+        setSpinTick((count) => count + 1)
+        setHighlightKey(entryKey(finalWinner))
+        setWinner(finalWinner)
+        setIsDrawing(false)
         return
       }
 
-      setHighlightKey(entryKey(entry))
+      const current = pickRandomEntry(pool)
+      setSpinningEntry(current)
+      setSpinTick((count) => count + 1)
+      setHighlightKey(entryKey(current))
 
-      if (Date.now() - startedAt >= DRAW_DURATION_MS) {
-        window.clearInterval(drawTimerRef.current)
-        drawTimerRef.current = null
+      const delay = 45 + progress ** 2.4 * 320
+      drawTimerRef.current = window.setTimeout(tick, delay)
+    }
 
-        const finalEntry = pickRandomEntry(pool)
-        if (finalEntry) {
-          setHighlightKey(entryKey(finalEntry))
-          setWinner(finalEntry)
-        }
-
-        setIsDrawing(false)
-      }
-    }, DRAW_TICK_MS)
+    drawTimerRef.current = window.setTimeout(tick, 45)
   }
+
+  const scopeLabel =
+    activeScope === 'all'
+      ? 'ทุกสาขา'
+      : activeScope
+        ? STUDENT_BRANCH_LABELS[activeScope] ?? activeScope
+        : null
 
   if (!isStudentMode && !isTeacherMode) {
     return (
@@ -120,19 +183,36 @@ export default function RandomDrawPage() {
               winner ? 'random-draw-page__result--winner' : ''
             } ${isDrawing ? 'random-draw-page__result--drawing' : ''}`}
           >
-            {winner ? (
+            {isDrawing && spinningEntry ? (
+              <>
+                <span className="random-draw-page__result-label">
+                  กำลังสุ่ม{scopeLabel ? ` · ${scopeLabel}` : ''}...
+                </span>
+                <span
+                  key={spinTick}
+                  className="random-draw-page__result-name random-draw-page__spin-name"
+                >
+                  {spinningEntry.name}
+                </span>
+                {spinningEntry.branch && (
+                  <span className="random-draw-page__result-branch random-draw-page__spin-branch">
+                    {spinningEntry.branch}
+                  </span>
+                )}
+              </>
+            ) : winner ? (
               <>
                 <span className="random-draw-page__result-label">ได้แก่</span>
-                <span className="random-draw-page__result-name">{winner.name}</span>
+                <span className="random-draw-page__result-name random-draw-page__winner-pop">
+                  {winner.name}
+                </span>
                 {winner.branch && (
                   <span className="random-draw-page__result-branch">{winner.branch}</span>
                 )}
               </>
             ) : (
               <>
-                <span className="random-draw-page__result-label">
-                  {isDrawing ? 'กำลังสุ่ม...' : 'พร้อมสุ่ม'}
-                </span>
+                <span className="random-draw-page__result-label">พร้อมสุ่ม</span>
                 <span className="random-draw-page__result-placeholder">
                   {totalCount > 0 ? `ทั้งหมด ${totalCount} คน` : 'ยังไม่มีรายชื่อ'}
                 </span>
@@ -140,14 +220,38 @@ export default function RandomDrawPage() {
             )}
           </div>
 
-          <button
-            type="button"
-            className="hint-btn hint-btn--gold random-draw-page__draw-btn"
-            onClick={handleDraw}
-            disabled={isDrawing || totalCount === 0}
-          >
-            {isDrawing ? 'กำลังสุ่ม...' : 'สุ่ม'}
-          </button>
+          {isStudentMode ? (
+            <div className="random-draw-page__draw-actions random-draw-page__draw-actions--four">
+              {STUDENT_DRAW_OPTIONS.map((option) => {
+                const count = getScopeCount(option.id)
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`hint-btn random-draw-page__scope-btn random-draw-page__scope-btn--${option.id.toLowerCase()} ${
+                      activeScope === option.id && isDrawing
+                        ? 'random-draw-page__scope-btn--active'
+                        : ''
+                    }`}
+                    onClick={() => handleDraw(option.id)}
+                    disabled={isDrawing || count === 0}
+                  >
+                    <span className="random-draw-page__scope-btn-label">{option.label}</span>
+                    <span className="random-draw-page__scope-btn-meta">{count} คน</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="hint-btn hint-btn--gold random-draw-page__draw-btn"
+              onClick={() => handleDraw('all')}
+              disabled={isDrawing || totalCount === 0}
+            >
+              {isDrawing ? 'กำลังสุ่ม...' : 'สุ่ม'}
+            </button>
+          )}
         </section>
 
         {totalCount === 0 && (
@@ -159,7 +263,12 @@ export default function RandomDrawPage() {
         {isStudentMode && studentsByBranch && (
           <section className="random-draw-page__lists" aria-label="รายชื่อนิสิตแยกสาขา">
             {BRANCH_OPTIONS.map((branch) => (
-              <div key={branch} className="random-draw-page__branch">
+              <div
+                key={branch}
+                className={`random-draw-page__branch random-draw-page__branch--${branch.toLowerCase()} ${
+                  activeScope === branch && isDrawing ? 'random-draw-page__branch--drawing' : ''
+                }`}
+              >
                 <h2 className="random-draw-page__branch-title">
                   {STUDENT_BRANCH_LABELS[branch]}
                   <span className="random-draw-page__branch-count">
