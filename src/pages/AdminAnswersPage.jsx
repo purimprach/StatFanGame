@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   clearAllAnswers,
   fetchAllAnswers,
@@ -67,6 +67,35 @@ export default function AdminAnswersPage() {
   const [savingTeacher, setSavingTeacher] = useState(false)
   const [arrivalPanelOpen, setArrivalPanelOpen] = useState(false)
   const [teacherPanelOpen, setTeacherPanelOpen] = useState(false)
+  const arrivalSyncKeyRef = useRef(null)
+  const teacherSyncKeyRef = useRef(null)
+
+  const applyArrivalSetting = useCallback((setting) => {
+    setArrivalSaved(setting)
+    const syncKey = setting?.updatedAt ?? 'empty'
+    if (arrivalSyncKeyRef.current === syncKey) {
+      return
+    }
+
+    arrivalSyncKeyRef.current = syncKey
+    setArrivalName(setting?.displayName ?? '')
+    setArrivalStudentId(setting?.studentId ?? '')
+    setArrivalBranch(setting?.branch ?? '')
+    setArrivalTime(setting?.arrivedAt ?? '')
+  }, [])
+
+  const applyTeacherSetting = useCallback((setting) => {
+    setTeacherSaved(setting)
+    const syncKey = setting?.updatedAt ?? 'empty'
+    if (teacherSyncKeyRef.current === syncKey) {
+      return
+    }
+
+    teacherSyncKeyRef.current = syncKey
+    setTeacherName(setting?.displayName ?? '')
+    setTeacherTitle(setting?.teacherTitle ?? '')
+    setTeacherTime(setting?.arrivedAt ?? '')
+  }, [])
 
   const loadAnswers = useCallback(async () => {
     setLoading(true)
@@ -86,23 +115,12 @@ export default function AdminAnswersPage() {
   }, [loadAnswers])
 
   useEffect(() => {
-    return subscribeFirstArrivalPrize((setting) => {
-      setArrivalSaved(setting)
-      setArrivalName(setting?.displayName ?? '')
-      setArrivalStudentId(setting?.studentId ?? '')
-      setArrivalBranch(setting?.branch ?? '')
-      setArrivalTime(setting?.arrivedAt ?? '')
-    })
-  }, [])
+    return subscribeFirstArrivalPrize(applyArrivalSetting)
+  }, [applyArrivalSetting])
 
   useEffect(() => {
-    return subscribeFirstTeacherPrize((setting) => {
-      setTeacherSaved(setting)
-      setTeacherName(setting?.displayName ?? '')
-      setTeacherTitle(setting?.teacherTitle ?? '')
-      setTeacherTime(setting?.arrivedAt ?? '')
-    })
-  }, [])
+    return subscribeFirstTeacherPrize(applyTeacherSetting)
+  }, [applyTeacherSetting])
 
   const demoMode = isUsingLocalDemo()
 
@@ -224,7 +242,7 @@ export default function AdminAnswersPage() {
         branch: arrivalBranch,
         arrivedAt: arrivalTime,
       })
-      setArrivalSaved(saved)
+      applyArrivalSetting(saved)
       setActionMessage(`บันทึกผู้มางานคนแรกแล้ว — ${saved.displayName}`)
     } catch (error) {
       setErrorMessage(error.message ?? 'บันทึกผู้มางานคนแรกไม่สำเร็จ')
@@ -240,11 +258,7 @@ export default function AdminAnswersPage() {
 
     try {
       await clearFirstArrivalPrize()
-      setArrivalSaved(null)
-      setArrivalName('')
-      setArrivalStudentId('')
-      setArrivalBranch('')
-      setArrivalTime('')
+      applyArrivalSetting(null)
       setActionMessage('ล้างข้อมูลผู้มางานคนแรกแล้ว')
     } catch (error) {
       setErrorMessage(error.message ?? 'ล้างข้อมูลไม่สำเร็จ')
@@ -265,7 +279,7 @@ export default function AdminAnswersPage() {
         teacherTitle: teacherTitle,
         arrivedAt: teacherTime,
       })
-      setTeacherSaved(saved)
+      applyTeacherSetting(saved)
       setActionMessage(`บันทึกอาจารย์มางานคนแรกแล้ว — ${saved.displayName}`)
     } catch (error) {
       setErrorMessage(error.message ?? 'บันทึกอาจารย์มางานคนแรกไม่สำเร็จ')
@@ -281,10 +295,7 @@ export default function AdminAnswersPage() {
 
     try {
       await clearFirstTeacherPrize()
-      setTeacherSaved(null)
-      setTeacherName('')
-      setTeacherTitle('')
-      setTeacherTime('')
+      applyTeacherSetting(null)
       setActionMessage('ล้างข้อมูลอาจารย์มางานคนแรกแล้ว')
     } catch (error) {
       setErrorMessage(error.message ?? 'ล้างข้อมูลไม่สำเร็จ')
