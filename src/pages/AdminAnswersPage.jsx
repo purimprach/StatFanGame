@@ -16,6 +16,11 @@ import {
   subscribeFirstArrivalPrize,
 } from '../lib/firstArrivalPrize'
 import {
+  clearFirstTeacherPrize,
+  saveFirstTeacherPrize,
+  subscribeFirstTeacherPrize,
+} from '../lib/firstTeacherPrize'
+import {
   BRANCH_OPTIONS,
   getQuestionLabel,
   getQuestionValue,
@@ -54,6 +59,11 @@ export default function AdminAnswersPage() {
   const [arrivalTime, setArrivalTime] = useState('')
   const [arrivalSaved, setArrivalSaved] = useState(null)
   const [savingArrival, setSavingArrival] = useState(false)
+  const [teacherName, setTeacherName] = useState('')
+  const [teacherTitle, setTeacherTitle] = useState('')
+  const [teacherTime, setTeacherTime] = useState('')
+  const [teacherSaved, setTeacherSaved] = useState(null)
+  const [savingTeacher, setSavingTeacher] = useState(false)
 
   const loadAnswers = useCallback(async () => {
     setLoading(true)
@@ -79,6 +89,15 @@ export default function AdminAnswersPage() {
       setArrivalStudentId(setting?.studentId ?? '')
       setArrivalBranch(setting?.branch ?? '')
       setArrivalTime(setting?.arrivedAt ?? '')
+    })
+  }, [])
+
+  useEffect(() => {
+    return subscribeFirstTeacherPrize((setting) => {
+      setTeacherSaved(setting)
+      setTeacherName(setting?.displayName ?? '')
+      setTeacherTitle(setting?.teacherTitle ?? '')
+      setTeacherTime(setting?.arrivedAt ?? '')
     })
   }, [])
 
@@ -231,6 +250,46 @@ export default function AdminAnswersPage() {
     }
   }
 
+  const handleSaveTeacherPrize = async (event) => {
+    event.preventDefault()
+    setSavingTeacher(true)
+    setErrorMessage('')
+    setActionMessage('')
+
+    try {
+      const saved = await saveFirstTeacherPrize({
+        displayName: teacherName,
+        teacherTitle: teacherTitle,
+        arrivedAt: teacherTime,
+      })
+      setTeacherSaved(saved)
+      setActionMessage(`บันทึกอาจารย์มางานคนแรกแล้ว — ${saved.displayName}`)
+    } catch (error) {
+      setErrorMessage(error.message ?? 'บันทึกอาจารย์มางานคนแรกไม่สำเร็จ')
+    } finally {
+      setSavingTeacher(false)
+    }
+  }
+
+  const handleClearTeacherPrize = async () => {
+    setSavingTeacher(true)
+    setErrorMessage('')
+    setActionMessage('')
+
+    try {
+      await clearFirstTeacherPrize()
+      setTeacherSaved(null)
+      setTeacherName('')
+      setTeacherTitle('')
+      setTeacherTime('')
+      setActionMessage('ล้างข้อมูลอาจารย์มางานคนแรกแล้ว')
+    } catch (error) {
+      setErrorMessage(error.message ?? 'ล้างข้อมูลไม่สำเร็จ')
+    } finally {
+      setSavingTeacher(false)
+    }
+  }
+
   return (
     <div className="admin-page">
       {demoMode && (
@@ -340,6 +399,73 @@ export default function AdminAnswersPage() {
                 className="admin-btn admin-btn--ghost"
                 onClick={handleClearArrivalPrize}
                 disabled={savingArrival}
+              >
+                ล้าง
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
+
+      <section className="admin-arrival-panel admin-arrival-panel--teacher">
+        <div className="admin-arrival-panel__header">
+          <div>
+            <p className="admin-arrival-panel__label">รางวัลอาจารย์มางานคนแรก · กรอกวันงาน</p>
+            <p className="admin-arrival-panel__hint">
+              กรอกชื่อเมื่อรู้อาจารย์มางานคนแรกแล้ว — จอ MC จะอัปเดตอัตโนมัติ (ปุ่ม「รางวัลพิเศษ
+              สำหรับอาจารย์คนแรก」)
+            </p>
+          </div>
+          {teacherSaved?.displayName && (
+            <p className="admin-arrival-panel__current">
+              บันทึกแล้ว: <strong>{teacherSaved.displayName}</strong>
+            </p>
+          )}
+        </div>
+
+        <form className="admin-arrival-form" onSubmit={handleSaveTeacherPrize}>
+          <label className="admin-arrival-form__field admin-arrival-form__field--wide">
+            <span>ชื่ออาจารย์</span>
+            <input
+              type="text"
+              value={teacherName}
+              onChange={(event) => setTeacherName(event.target.value)}
+              placeholder="เช่น ผศ. ดร.ภูริพันธุ์ รุจิขจร"
+              required
+            />
+          </label>
+          <label className="admin-arrival-form__field admin-arrival-form__field--wide">
+            <span>ตำแหน่ง/คำนำหน้า (ถ้ามี)</span>
+            <input
+              type="text"
+              value={teacherTitle}
+              onChange={(event) => setTeacherTitle(event.target.value)}
+              placeholder="เช่น รศ. ดร."
+            />
+          </label>
+          <label className="admin-arrival-form__field admin-arrival-form__field--wide">
+            <span>เวลามางาน (ถ้ามี)</span>
+            <input
+              type="text"
+              value={teacherTime}
+              onChange={(event) => setTeacherTime(event.target.value)}
+              placeholder="เช่น 17:30 น."
+            />
+          </label>
+          <div className="admin-arrival-form__actions">
+            <button
+              type="submit"
+              className="admin-btn admin-btn--primary"
+              disabled={savingTeacher}
+            >
+              {savingTeacher ? 'กำลังบันทึก...' : 'บันทึกอาจารย์มางานคนแรก'}
+            </button>
+            {teacherSaved && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={handleClearTeacherPrize}
+                disabled={savingTeacher}
               >
                 ล้าง
               </button>

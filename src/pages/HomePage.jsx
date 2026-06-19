@@ -5,10 +5,12 @@ import PrizeRevealOverlay from '../components/PrizeRevealOverlay'
 import QrJoinModal from '../components/QrJoinModal'
 import {
   buildFirstArrivalPrize,
+  buildFirstTeacherPrize,
   resolvePrizeView,
   SPECIAL_PRIZES,
 } from '../data/specialPrizes'
 import { subscribeFirstArrivalPrize } from '../lib/firstArrivalPrize'
+import { subscribeFirstTeacherPrize } from '../lib/firstTeacherPrize'
 import { useRevealAnimation } from '../hooks/useRevealAnimation'
 import { useClearActiveQuestion } from '../hooks/useActiveQuestion'
 import '../App.css'
@@ -77,17 +79,20 @@ export default function HomePage() {
   const [activePrizeId, setActivePrizeId] = useState(null)
   const [lastFormStep, setLastFormStep] = useState(0)
   const [firstArrivalSetting, setFirstArrivalSetting] = useState(null)
+  const [firstTeacherSetting, setFirstTeacherSetting] = useState(null)
   useClearActiveQuestion()
 
   useEffect(() => subscribeFirstArrivalPrize(setFirstArrivalSetting), [])
+  useEffect(() => subscribeFirstTeacherPrize(setFirstTeacherSetting), [])
 
   const prizeList = useMemo(
     () => [
       buildFirstArrivalPrize(firstArrivalSetting),
+      buildFirstTeacherPrize(firstTeacherSetting),
       SPECIAL_PRIZES.firstFormRegistration,
       SPECIAL_PRIZES.lastFormRegistration,
     ],
-    [firstArrivalSetting],
+    [firstArrivalSetting, firstTeacherSetting],
   )
 
   const activePrize = prizeList.find((prize) => prize.id === activePrizeId) ?? null

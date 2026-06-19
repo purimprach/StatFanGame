@@ -113,6 +113,15 @@ export default function StaffAnswerSheetPage() {
       </section>
 
       <section className="staff-sheet__section staff-sheet__section--prize">
+        <h2>รางวัลอาจารย์มางานคนแรก (กรอกวันงาน)</h2>
+        <p className="staff-sheet__prize-intro">
+          วันงานให้ <strong>แอดมิน</strong> เปิด{' '}
+          <strong>/admin-answers</strong> → กรอกชื่อในช่อง「รางวัลอาจารย์มางานคนแรก」→
+          กดบันทึก → <strong>MC</strong> กดปุ่ม「รางวัลพิเศษ สำหรับอาจารย์คนแรก」บนหน้าแรก
+        </p>
+      </section>
+
+      <section className="staff-sheet__section staff-sheet__section--prize">
         <h2>รางวัลมางานคนแรก (กรอกวันงาน)</h2>
         <p className="staff-sheet__prize-intro">
           วันงานให้ <strong>แอดมิน</strong> เปิด{' '}

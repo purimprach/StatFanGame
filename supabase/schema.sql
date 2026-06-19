@@ -136,3 +136,28 @@ create policy "Allow anonymous delete last form prize"
   on public.stat_last_form_prize for delete to anon, authenticated using (true);
 
 alter publication supabase_realtime add table public.stat_last_form_prize;
+
+-- First teacher arrival prize (admin fills on event day -> MC home screen)
+create table if not exists public.stat_first_teacher_prize (
+  id text primary key,
+  display_name text,
+  teacher_title text,
+  arrived_at text,
+  updated_at timestamptz default now()
+);
+
+alter table public.stat_first_teacher_prize enable row level security;
+
+create policy "Allow anonymous read first teacher prize"
+  on public.stat_first_teacher_prize for select to anon, authenticated using (true);
+
+create policy "Allow anonymous insert first teacher prize"
+  on public.stat_first_teacher_prize for insert to anon, authenticated with check (true);
+
+create policy "Allow anonymous update first teacher prize"
+  on public.stat_first_teacher_prize for update to anon, authenticated using (true);
+
+create policy "Allow anonymous delete first teacher prize"
+  on public.stat_first_teacher_prize for delete to anon, authenticated using (true);
+
+alter publication supabase_realtime add table public.stat_first_teacher_prize;

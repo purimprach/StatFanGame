@@ -139,6 +139,15 @@
   border-color: rgba(212, 175, 55, 0.4);
 }
 
+.admin-arrival-panel--teacher {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.admin-arrival-panel--teacher .admin-arrival-panel__label {
+  color: #7dd3fc;
+}
+
 .admin-arrival-panel--last-form .admin-arrival-panel__label {
   color: #f0d77a;
 }

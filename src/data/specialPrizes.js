@@ -8,6 +8,15 @@ export const SPECIAL_PRIZES = {
     details: [],
     emptyMessage: 'ยังไม่ได้กรอกชื่อ — ให้แอดมินกรอกที่หน้า /admin-answers',
   },
+  firstTeacher: {
+    id: 'first-teacher',
+    buttonLabel: 'รางวัลพิเศษ สำหรับอาจารย์คนแรก',
+    revealLabel: 'รางวัลพิเศษ · อาจารย์มางานคนแรก',
+    displayName: null,
+    subtitle: 'อาจารย์ผู้มางานคนแรกในงาน STAT#55',
+    details: [],
+    emptyMessage: 'ยังไม่ได้กรอกชื่อ — ให้แอดมินกรอกที่หน้า /admin-answers',
+  },
   firstFormRegistration: {
     id: 'first-form',
     buttonLabel: 'คนที่กรอกฟอร์มมางานคนแรก',
@@ -71,12 +80,33 @@ function buildEditablePrize(base, setting, timeLabel, timeKey) {
 
 export const SPECIAL_PRIZE_LIST = [
   SPECIAL_PRIZES.firstArrival,
+  SPECIAL_PRIZES.firstTeacher,
   SPECIAL_PRIZES.firstFormRegistration,
   SPECIAL_PRIZES.lastFormRegistration,
 ]
 
 export function buildFirstArrivalPrize(setting) {
   return buildEditablePrize(SPECIAL_PRIZES.firstArrival, setting, 'เวลามางาน', 'arrivedAt')
+}
+
+export function buildFirstTeacherPrize(setting) {
+  const base = SPECIAL_PRIZES.firstTeacher
+
+  if (!setting?.displayName) {
+    return {
+      ...base,
+      displayName: base.emptyMessage,
+      isEmpty: true,
+    }
+  }
+
+  return {
+    ...base,
+    displayName: setting.displayName,
+    subtitle: setting.teacherTitle || base.subtitle,
+    details: setting.arrivedAt ? [{ label: 'เวลามางาน', value: setting.arrivedAt }] : [],
+    isEmpty: false,
+  }
 }
 
 export function resolvePrizeView(prize, lastFormStep = 0) {
