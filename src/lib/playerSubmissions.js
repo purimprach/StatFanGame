@@ -9,19 +9,17 @@ export function getPlayerSubmissions() {
   }
 }
 
+export function getSubmissions(gameType, questionKey) {
+  return getPlayerSubmissions()
+    .filter((entry) => entry.gameType === gameType && entry.questionKey === questionKey)
+    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+}
+
 export function getSubmission(gameType, questionKey) {
-  return (
-    getPlayerSubmissions().find(
-      (entry) => entry.gameType === gameType && entry.questionKey === questionKey,
-    ) ?? null
-  )
+  return getSubmissions(gameType, questionKey)[0] ?? null
 }
 
 export function saveSubmission({ gameType, questionKey, answerText, submittedAt }) {
-  if (getSubmission(gameType, questionKey)) {
-    return getSubmission(gameType, questionKey)
-  }
-
   const entry = {
     gameType,
     questionKey,
@@ -35,4 +33,20 @@ export function saveSubmission({ gameType, questionKey, answerText, submittedAt 
   )
 
   return entry
+}
+
+export function syncSubmissions(gameType, questionKey, remoteSubmissions) {
+  const others = getPlayerSubmissions().filter(
+    (entry) => !(entry.gameType === gameType && entry.questionKey === questionKey),
+  )
+
+  const synced = remoteSubmissions.map((submission) => ({
+    gameType,
+    questionKey,
+    answerText: submission.answerText,
+    submittedAt: submission.submittedAt,
+  }))
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...others, ...synced]))
+  return getSubmissions(gameType, questionKey)
 }

@@ -7,30 +7,36 @@ import {
 import { clearAllWinnerSelections } from './winnerSelection'
 import { isSupabaseConfigured, supabase } from './supabase'
 
+export const MAX_ANSWER_ATTEMPTS = 2
+
 export function isUsingLocalDemo() {
   return !isSupabaseConfigured()
 }
 
 export async function hasPlayerAnswered({ playerName, gameType, questionKey }) {
-  const existing = await fetchPlayerSubmission({ playerName, gameType, questionKey })
-  return Boolean(existing)
+  const count = await getPlayerSubmissionCount({ playerName, gameType, questionKey })
+  return count >= MAX_ANSWER_ATTEMPTS
 }
 
-export async function fetchPlayerSubmission({ playerName, gameType, questionKey }) {
+export async function getPlayerSubmissionCount({ playerName, gameType, questionKey }) {
+  const submissions = await fetchPlayerSubmissions({ playerName, gameType, questionKey })
+  return submissions.length
+}
+
+export async function fetchPlayerSubmissions({ playerName, gameType, questionKey }) {
   if (!isSupabaseConfigured()) {
-    const row = fetchLocalAnswers().find(
-      (entry) =>
-        entry.player_name === playerName &&
-        entry.game_type === gameType &&
-        entry.question_key === questionKey,
-    )
-    if (!row) {
-      return null
-    }
-    return {
-      answerText: row.answer_text,
-      submittedAt: row.submitted_at,
-    }
+    return fetchLocalAnswers()
+      .filter(
+        (entry) =>
+          entry.player_name === playerName &&
+          entry.game_type === gameType &&
+          entry.question_key === questionKey,
+      )
+      .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
+      .map((row) => ({
+        answerText: row.answer_text,
+        submittedAt: row.submitted_at,
+      }))
   }
 
   const { data, error } = await supabase
@@ -40,21 +46,20 @@ export async function fetchPlayerSubmission({ playerName, gameType, questionKey 
     .eq('game_type', gameType)
     .eq('question_key', questionKey)
     .order('submitted_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
 
   if (error) {
     throw error
   }
 
-  if (!data) {
-    return null
-  }
+  return (data ?? []).map((row) => ({
+    answerText: row.answer_text,
+    submittedAt: row.submitted_at,
+  }))
+}
 
-  return {
-    answerText: data.answer_text,
-    submittedAt: data.submitted_at,
-  }
+export async function fetchPlayerSubmission({ playerName, gameType, questionKey }) {
+  const submissions = await fetchPlayerSubmissions({ playerName, gameType, questionKey })
+  return submissions[0] ?? null
 }
 
 export async function submitAnswer({
@@ -65,7 +70,7 @@ export async function submitAnswer({
   answerText,
 }) {
   if (await hasPlayerAnswered({ playerName, gameType, questionKey })) {
-    throw new Error('คุณส่งคำตอบข้อนี้แล้ว ไม่สามารถส่งซ้ำได้')
+    throw new Error(`คุณส่งครบ ${MAX_ANSWER_ATTEMPTS} ครั้งแล้ว`)
   }
 
   const isCorrect = checkAnswer(gameType, questionKey, answerText)

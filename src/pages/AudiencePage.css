@@ -293,6 +293,12 @@
   word-break: break-word;
 }
 
+.audience-submitted__time {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .audience-note {
   margin: 0.9rem 0 0;
   color: var(--text-muted);

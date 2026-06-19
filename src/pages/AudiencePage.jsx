@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchPlayerSubmission,
+  fetchPlayerSubmissions,
+  MAX_ANSWER_ATTEMPTS,
   submitAnswer,
   isUsingLocalDemo,
 } from '../lib/answersApi'
 import { getPlayerProfile, savePlayerProfile } from '../lib/playerStorage'
-import { getSubmission, saveSubmission } from '../lib/playerSubmissions'
+import { getSubmissions, saveSubmission, syncSubmissions } from '../lib/playerSubmissions'
 import { useSyncedActiveQuestion } from '../hooks/useSyncedActiveQuestion'
 import {
   BRANCH_OPTIONS,
@@ -29,14 +30,16 @@ export default function AudiencePage() {
   const [branch, setBranch] = useState(BRANCH_OPTIONS[0])
   const [questionValue, setQuestionValue] = useState('')
   const [answerText, setAnswerText] = useState('')
-  const [submission, setSubmission] = useState(null)
+  const [submissions, setSubmissions] = useState([])
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const { activeQuestion, ready, syncAvailable } = useSyncedActiveQuestion()
 
   const { gameType, questionKey } = parseQuestionValue(questionValue || 'unknown:unknown')
   const hasActiveQuestion = Boolean(activeQuestion?.gameType && activeQuestion?.questionKey)
-  const isLocked = Boolean(submission) || status === 'submitted'
+  const submissionCount = submissions.length
+  const remainingAttempts = Math.max(0, MAX_ANSWER_ATTEMPTS - submissionCount)
+  const isLocked = submissionCount >= MAX_ANSWER_ATTEMPTS
 
   useEffect(() => {
     if (activeQuestion?.gameType && activeQuestion?.questionKey) {
@@ -57,7 +60,7 @@ export default function AudiencePage() {
 
   useEffect(() => {
     if (!hasActiveQuestion) {
-      setSubmission(null)
+      setSubmissions([])
       setAnswerText('')
       setStatus('idle')
       setErrorMessage('')
@@ -66,16 +69,10 @@ export default function AudiencePage() {
 
     setErrorMessage('')
 
-    const localSubmission = getSubmission(gameType, questionKey)
-    if (localSubmission) {
-      setSubmission(localSubmission)
-      setAnswerText(localSubmission.answerText)
-      setStatus('submitted')
-      return undefined
-    }
+    const localSubmissions = getSubmissions(gameType, questionKey)
 
     if (!profile) {
-      setSubmission(null)
+      setSubmissions(localSubmissions)
       setAnswerText('')
       setStatus('idle')
       return undefined
@@ -84,38 +81,30 @@ export default function AudiencePage() {
     let cancelled = false
     setStatus('loading')
 
-    fetchPlayerSubmission({
+    fetchPlayerSubmissions({
       playerName: profile.name,
       gameType,
       questionKey,
     })
-      .then((remoteSubmission) => {
+      .then((remoteSubmissions) => {
         if (cancelled) {
           return
         }
 
-        if (remoteSubmission) {
-          const saved = saveSubmission({
-            gameType,
-            questionKey,
-            answerText: remoteSubmission.answerText,
-            submittedAt: remoteSubmission.submittedAt,
-          })
-          setSubmission(saved)
-          setAnswerText(saved.answerText)
-          setStatus('submitted')
-          return
-        }
+        const merged =
+          remoteSubmissions.length > 0
+            ? syncSubmissions(gameType, questionKey, remoteSubmissions)
+            : localSubmissions
 
-        setSubmission(null)
+        setSubmissions(merged)
         setAnswerText('')
-        setStatus('idle')
+        setStatus(merged.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
       })
       .catch(() => {
         if (!cancelled) {
-          setSubmission(null)
+          setSubmissions(localSubmissions)
           setAnswerText('')
-          setStatus('idle')
+          setStatus(localSubmissions.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
         }
       })
 
@@ -169,8 +158,12 @@ export default function AudiencePage() {
         answerText: trimmedAnswer,
         submittedAt: result.submittedAt,
       })
-      setSubmission(saved)
-      setStatus('submitted')
+      const updated = [saved, ...submissions].sort(
+        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
+      )
+      setSubmissions(updated)
+      setAnswerText('')
+      setStatus(updated.length >= MAX_ANSWER_ATTEMPTS ? 'done' : 'idle')
     } catch (error) {
       setStatus('idle')
       setErrorMessage(error.message ?? 'ส่งคำตอบไม่สำเร็จ ลองใหม่อีกครั้ง')
@@ -179,7 +172,7 @@ export default function AudiencePage() {
 
   const handleEditProfile = () => {
     setProfile(null)
-    setSubmission(null)
+    setSubmissions([])
     setStatus('idle')
     setErrorMessage('')
   }
@@ -298,20 +291,24 @@ export default function AudiencePage() {
 
             {errorMessage && <p className="audience-error">{errorMessage}</p>}
 
-            {submission && (
+            {submissions.length > 0 && (
               <div className="audience-submitted">
                 <p className="audience-success" role="status">
-                  ส่งคำตอบ {getQuestionLabel(gameType, questionKey)} แล้ว
+                  ส่งแล้ว {submissionCount}/{MAX_ANSWER_ATTEMPTS} ครั้ง
                 </p>
                 <dl className="audience-submitted__meta">
-                  <div>
-                    <dt>คำตอบที่บันทึก</dt>
-                    <dd>{submission.answerText}</dd>
-                  </div>
-                  <div>
-                    <dt>เวลาส่ง</dt>
-                    <dd>{formatDateTime(submission.submittedAt)}</dd>
-                  </div>
+                  {[...submissions].reverse().map((entry, index) => (
+                    <div key={`${entry.submittedAt}-${index}`}>
+                      <dt>ครั้งที่ {index + 1}</dt>
+                      <dd>
+                        {entry.answerText}
+                        <span className="audience-submitted__time">
+                          {' '}
+                          · {formatDateTime(entry.submittedAt)}
+                        </span>
+                      </dd>
+                    </div>
+                  ))}
                 </dl>
               </div>
             )}
@@ -331,12 +328,14 @@ export default function AudiencePage() {
                 : status === 'loading'
                   ? 'กำลังโหลด...'
                   : isLocked
-                    ? 'ส่งแล้ว'
-                    : 'ส่งคำตอบ'}
+                    ? 'ส่งครบแล้ว'
+                    : remainingAttempts < MAX_ANSWER_ATTEMPTS
+                      ? `ส่งคำตอบ (เหลือ ${remainingAttempts} ครั้ง)`
+                      : 'ส่งคำตอบ'}
             </button>
 
             <p className="audience-note">
-              ส่งได้ครั้งเดียวต่อข้อ — เมื่อ MC เปิดรอบใหม่บนเวที ข้อจะเปลี่ยนให้อัตโนมัติ
+              ส่งได้ {MAX_ANSWER_ATTEMPTS} ครั้งต่อข้อ — เมื่อ MC เปิดรอบใหม่บนเวที ข้อจะเปลี่ยนให้อัตโนมัติ
             </p>
           </form>
         </>
