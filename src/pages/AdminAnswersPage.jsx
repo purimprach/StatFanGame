@@ -26,6 +26,7 @@ import {
   getQuestionValue,
   QUESTION_OPTIONS,
 } from '../data/questions'
+import AdminPrizePanel from '../components/AdminPrizePanel'
 import './AdminAnswersPage.css'
 
 function formatDateTime(value) {
@@ -64,6 +65,8 @@ export default function AdminAnswersPage() {
   const [teacherTime, setTeacherTime] = useState('')
   const [teacherSaved, setTeacherSaved] = useState(null)
   const [savingTeacher, setSavingTeacher] = useState(false)
+  const [arrivalPanelOpen, setArrivalPanelOpen] = useState(false)
+  const [teacherPanelOpen, setTeacherPanelOpen] = useState(false)
 
   const loadAnswers = useCallback(async () => {
     setLoading(true)
@@ -325,22 +328,21 @@ export default function AdminAnswersPage() {
         </div>
       </header>
 
-      <section className="admin-arrival-panel">
-        <div className="admin-arrival-panel__header">
-          <div>
-            <p className="admin-arrival-panel__label">รางวัลมางานคนแรก · กรอกวันงาน</p>
-            <p className="admin-arrival-panel__hint">
-              กรอกชื่อเมื่อรู้ผู้มางานคนแรกแล้ว — จอ MC จะอัปเดตอัตโนมัติ (ปุ่ม「รางวัลพิเศษ
-              สำหรับคนที่มางานคนแรก」)
-            </p>
-          </div>
-          {arrivalSaved?.displayName && (
-            <p className="admin-arrival-panel__current">
-              บันทึกแล้ว: <strong>{arrivalSaved.displayName}</strong>
-            </p>
-          )}
+      <section className="admin-prize-panels">
+        <div className="admin-prize-panels__intro">
+          <h2 className="admin-prize-panels__title">รางวัลพิเศษ · กรอกวันงาน</h2>
+          <p className="admin-prize-panels__subtitle">
+            กด「ขยาย」เพื่อกรอกชื่อ — จอ MC อัปเดตอัตโนมัติหลังบันทึก
+          </p>
         </div>
 
+        <AdminPrizePanel
+          label="รางวัลมางานคนแรก"
+          hint="กรอกชื่อเมื่อรู้ผู้มางานคนแรกแล้ว — ปุ่ม MC「รางวัลพิเศษ สำหรับคนที่มางานคนแรก」"
+          savedName={arrivalSaved?.displayName}
+          open={arrivalPanelOpen}
+          onToggle={() => setArrivalPanelOpen((current) => !current)}
+        >
         <form className="admin-arrival-form" onSubmit={handleSaveArrivalPrize}>
           <label className="admin-arrival-form__field admin-arrival-form__field--wide">
             <span>ชื่อ-นามสกุล</span>
@@ -405,24 +407,16 @@ export default function AdminAnswersPage() {
             )}
           </div>
         </form>
-      </section>
+        </AdminPrizePanel>
 
-      <section className="admin-arrival-panel admin-arrival-panel--teacher">
-        <div className="admin-arrival-panel__header">
-          <div>
-            <p className="admin-arrival-panel__label">รางวัลอาจารย์มางานคนแรก · กรอกวันงาน</p>
-            <p className="admin-arrival-panel__hint">
-              กรอกชื่อเมื่อรู้อาจารย์มางานคนแรกแล้ว — จอ MC จะอัปเดตอัตโนมัติ (ปุ่ม「รางวัลพิเศษ
-              สำหรับอาจารย์คนแรก」)
-            </p>
-          </div>
-          {teacherSaved?.displayName && (
-            <p className="admin-arrival-panel__current">
-              บันทึกแล้ว: <strong>{teacherSaved.displayName}</strong>
-            </p>
-          )}
-        </div>
-
+        <AdminPrizePanel
+          label="รางวัลอาจารย์มางานคนแรก"
+          hint="กรอกชื่อเมื่อรู้อาจารย์มางานคนแรกแล้ว — ปุ่ม MC「รางวัลพิเศษ สำหรับอาจารย์คนแรก」"
+          savedName={teacherSaved?.displayName}
+          open={teacherPanelOpen}
+          onToggle={() => setTeacherPanelOpen((current) => !current)}
+          variant="teacher"
+        >
         <form className="admin-arrival-form" onSubmit={handleSaveTeacherPrize}>
           <label className="admin-arrival-form__field admin-arrival-form__field--wide">
             <span>ชื่ออาจารย์</span>
@@ -472,6 +466,7 @@ export default function AdminAnswersPage() {
             )}
           </div>
         </form>
+        </AdminPrizePanel>
       </section>
 
       <div className="admin-toolbar">

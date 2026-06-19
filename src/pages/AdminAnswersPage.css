@@ -127,11 +127,36 @@
 }
 
 .admin-arrival-panel {
-  margin-bottom: 1.25rem;
-  padding: 1rem 1.1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.85rem 1rem;
   border-radius: 0.85rem;
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.admin-arrival-panel--collapsed {
+  padding-bottom: 0.75rem;
+}
+
+.admin-prize-panels {
+  margin-bottom: 1.25rem;
+}
+
+.admin-prize-panels__intro {
+  margin-bottom: 0.75rem;
+}
+
+.admin-prize-panels__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.admin-prize-panels__subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-muted);
 }
 
 .admin-arrival-panel--last-form {
@@ -155,10 +180,60 @@
 .admin-arrival-panel__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0;
+}
+
+.admin-arrival-panel:not(.admin-arrival-panel--collapsed) .admin-arrival-panel__header {
+  margin-bottom: 0.75rem;
+}
+
+.admin-arrival-panel__title-wrap {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.admin-arrival-panel__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(248, 244, 232, 0.22);
+  border-radius: 0.55rem;
+  background: rgba(10, 22, 40, 0.65);
+  color: var(--cream-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-arrival-panel__toggle:hover {
+  border-color: rgba(240, 215, 122, 0.45);
+  color: var(--gold-light);
+}
+
+.admin-arrival-panel__toggle-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.admin-arrival-panel__collapsed-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.admin-arrival-panel__body .admin-arrival-panel__hint {
+  margin-bottom: 0.65rem;
+}
+
+.admin-arrival-panel__body .admin-arrival-panel__current {
+  margin-bottom: 0.75rem;
 }
 
 .admin-arrival-panel__label {
