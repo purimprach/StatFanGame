@@ -13,6 +13,23 @@
   color: var(--gold-light);
   font-size: 0.88rem;
   text-align: center;
+  line-height: 1.45;
+}
+
+.audience-demo-banner--critical {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
+.audience-demo-banner__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.audience-demo-banner p {
+  margin: 0;
 }
 
 .audience-sync-banner {

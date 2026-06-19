@@ -52,4 +52,5 @@ create policy "Allow anonymous insert active question"
 create policy "Allow anonymous update active question"
   on public.stat_active_question for update to anon, authenticated using (true);
 
--- In Supabase Dashboard: Database -> Replication -> add stat_active_question to supabase_realtime
+-- Enable Realtime for live MC ↔ phone sync
+alter publication supabase_realtime add table public.stat_active_question;

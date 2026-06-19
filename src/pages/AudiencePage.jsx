@@ -198,9 +198,13 @@ export default function AudiencePage() {
   return (
     <div className="audience-page">
       {demoMode && (
-        <p className="audience-demo-banner">
-          โหมดทดสอบ — ซิงก์จอเวทีใช้ได้แค่แท็บเดียวกัน ตั้ง Supabase เพื่อใช้กับมือถือจริง
-        </p>
+        <div className="audience-demo-banner audience-demo-banner--critical">
+          <p className="audience-demo-banner__title">มือถือยังเชื่อมจอเวทีไม่ได้</p>
+          <p>
+            ต้องตั้ง <strong>Supabase</strong> บน Vercel ก่อน (ประมาณ 10 นาที)
+            — ตอนนี้ใช้ได้แค่ทดสอบ 2 แท็บในเบราว์เซอร์เครื่องเดียวกัน
+          </p>
+        </div>
       )}
       {!demoMode && syncAvailable && (
         <p className="audience-sync-banner">เชื่อมกับจอเวทีแล้ว — ข้อจะเปลี่ยนตามเกมที่ MC เปิด</p>
