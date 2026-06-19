@@ -19,9 +19,9 @@ const REVEAL_INTERVAL_MS = 480
 const EXPAND_DURATION_MS = 750
 
 const TIMER_PHASES = {
-  compact: { duration: 10, label: 'เวลาตอบ' },
-  expand: { duration: 7, label: 'ขยายแล้ว — ตอบ!' },
-  hint: { duration: 5, label: 'คำใบ้ — ตอบ!' },
+  compact: { duration: 12, label: 'เวลาตอบ' },
+  expand: { duration: 10, label: 'ขยายแล้ว — ตอบ!' },
+  hint: { duration: 8, label: 'คำใบ้ — ตอบ!' },
 }
 
 const initialHelpers = () => ({
@@ -460,7 +460,7 @@ export default function SiasaPlayPage() {
               <p className="siasa-timer__label">{timerLabel}</p>
               <p className="siasa-timer__seconds">{secondsLeft}</p>
               <p className="siasa-timer__meta">
-                {timerPhase === 'compact' && '10 วินาทีแรก'}
+                {timerPhase === 'compact' && '12 วินาทีแรก'}
                 {timerPhase === 'expand' && 'หลังขยายตัวอักษร'}
                 {timerPhase === 'hint' && 'หลังเปิดคำใบ้'}
               </p>
