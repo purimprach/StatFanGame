@@ -17,16 +17,16 @@ export function getSubmission(gameType, questionKey) {
   )
 }
 
-export function saveSubmission({ gameType, questionKey, answerText }) {
+export function saveSubmission({ gameType, questionKey, answerText, submittedAt }) {
   if (getSubmission(gameType, questionKey)) {
-    return null
+    return getSubmission(gameType, questionKey)
   }
 
   const entry = {
     gameType,
     questionKey,
     answerText: answerText.trim(),
-    submittedAt: new Date().toISOString(),
+    submittedAt: submittedAt ?? new Date().toISOString(),
   }
 
   localStorage.setItem(

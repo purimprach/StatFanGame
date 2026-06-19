@@ -15,6 +15,16 @@ function writeLocalAnswers(rows) {
 
 export function insertLocalAnswer(row) {
   const rows = readLocalAnswers()
+  const alreadyExists = rows.some(
+    (entry) =>
+      entry.player_name === row.player_name &&
+      entry.game_type === row.game_type &&
+      entry.question_key === row.question_key,
+  )
+  if (alreadyExists) {
+    return null
+  }
+
   const entry = {
     id: crypto.randomUUID(),
     ...row,

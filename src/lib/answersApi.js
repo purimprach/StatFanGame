@@ -11,28 +11,49 @@ export function isUsingLocalDemo() {
 }
 
 export async function hasPlayerAnswered({ playerName, gameType, questionKey }) {
+  const existing = await fetchPlayerSubmission({ playerName, gameType, questionKey })
+  return Boolean(existing)
+}
+
+export async function fetchPlayerSubmission({ playerName, gameType, questionKey }) {
   if (!isSupabaseConfigured()) {
-    return fetchLocalAnswers().some(
-      (row) =>
-        row.player_name === playerName &&
-        row.game_type === gameType &&
-        row.question_key === questionKey,
+    const row = fetchLocalAnswers().find(
+      (entry) =>
+        entry.player_name === playerName &&
+        entry.game_type === gameType &&
+        entry.question_key === questionKey,
     )
+    if (!row) {
+      return null
+    }
+    return {
+      answerText: row.answer_text,
+      submittedAt: row.submitted_at,
+    }
   }
 
   const { data, error } = await supabase
     .from('stat_answers')
-    .select('id')
+    .select('answer_text, submitted_at')
     .eq('player_name', playerName)
     .eq('game_type', gameType)
     .eq('question_key', questionKey)
+    .order('submitted_at', { ascending: false })
     .limit(1)
+    .maybeSingle()
 
   if (error) {
     throw error
   }
 
-  return (data?.length ?? 0) > 0
+  if (!data) {
+    return null
+  }
+
+  return {
+    answerText: data.answer_text,
+    submittedAt: data.submitted_at,
+  }
 }
 
 export async function submitAnswer({
@@ -59,7 +80,7 @@ export async function submitAnswer({
 
   if (!isSupabaseConfigured()) {
     insertLocalAnswer(payload)
-    return { isCorrect, demo: true }
+    return { isCorrect, submittedAt: payload.submitted_at, demo: true }
   }
 
   const { error } = await supabase.from('stat_answers').insert(payload)
@@ -68,7 +89,7 @@ export async function submitAnswer({
     throw error
   }
 
-  return { isCorrect }
+  return { isCorrect, submittedAt: payload.submitted_at }
 }
 
 export async function fetchAllAnswers() {

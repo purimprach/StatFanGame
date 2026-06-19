@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { submitAnswer, isUsingLocalDemo } from '../lib/answersApi'
+import {
+  fetchPlayerSubmission,
+  submitAnswer,
+  isUsingLocalDemo,
+} from '../lib/answersApi'
 import { getPlayerProfile, savePlayerProfile } from '../lib/playerStorage'
 import { getSubmission, saveSubmission } from '../lib/playerSubmissions'
 import {
@@ -11,6 +15,13 @@ import {
 } from '../data/questions'
 import './AudiencePage.css'
 
+function formatDateTime(value) {
+  return new Intl.DateTimeFormat('th-TH', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(new Date(value))
+}
+
 export default function AudiencePage() {
   const [profile, setProfile] = useState(() => getPlayerProfile())
   const [name, setName] = useState('')
@@ -20,12 +31,12 @@ export default function AudiencePage() {
     getQuestionValue(QUESTION_OPTIONS[0].gameType, QUESTION_OPTIONS[0].questionKey),
   )
   const [answerText, setAnswerText] = useState('')
+  const [submission, setSubmission] = useState(null)
   const [status, setStatus] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
   const { gameType, questionKey } = parseQuestionValue(questionValue)
-  const existingSubmission = getSubmission(gameType, questionKey)
-  const isLocked = Boolean(existingSubmission) || status === 'submitted'
+  const isLocked = Boolean(submission) || status === 'submitted'
 
   useEffect(() => {
     if (profile) {
@@ -38,16 +49,65 @@ export default function AudiencePage() {
   }, [profile])
 
   useEffect(() => {
-    const submission = getSubmission(gameType, questionKey)
-    if (submission) {
-      setAnswerText(submission.answerText)
+    setErrorMessage('')
+
+    const localSubmission = getSubmission(gameType, questionKey)
+    if (localSubmission) {
+      setSubmission(localSubmission)
+      setAnswerText(localSubmission.answerText)
       setStatus('submitted')
-    } else {
+      return undefined
+    }
+
+    if (!profile) {
+      setSubmission(null)
       setAnswerText('')
       setStatus('idle')
+      return undefined
     }
-    setErrorMessage('')
-  }, [gameType, questionKey])
+
+    let cancelled = false
+    setStatus('loading')
+
+    fetchPlayerSubmission({
+      playerName: profile.name,
+      gameType,
+      questionKey,
+    })
+      .then((remoteSubmission) => {
+        if (cancelled) {
+          return
+        }
+
+        if (remoteSubmission) {
+          const saved = saveSubmission({
+            gameType,
+            questionKey,
+            answerText: remoteSubmission.answerText,
+            submittedAt: remoteSubmission.submittedAt,
+          })
+          setSubmission(saved)
+          setAnswerText(saved.answerText)
+          setStatus('submitted')
+          return
+        }
+
+        setSubmission(null)
+        setAnswerText('')
+        setStatus('idle')
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSubmission(null)
+          setAnswerText('')
+          setStatus('idle')
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [profile, gameType, questionKey])
 
   const resolvedBranch = branch === 'อื่นๆ' ? customBranch.trim() : branch
 
@@ -86,7 +146,7 @@ export default function AudiencePage() {
     setErrorMessage('')
 
     try {
-      await submitAnswer({
+      const result = await submitAnswer({
         playerName: profile.name,
         branch: profile.branch,
         gameType,
@@ -94,7 +154,13 @@ export default function AudiencePage() {
         answerText: trimmedAnswer,
       })
 
-      saveSubmission({ gameType, questionKey, answerText: trimmedAnswer })
+      const saved = saveSubmission({
+        gameType,
+        questionKey,
+        answerText: trimmedAnswer,
+        submittedAt: result.submittedAt,
+      })
+      setSubmission(saved)
       setStatus('submitted')
     } catch (error) {
       setStatus('idle')
@@ -104,6 +170,7 @@ export default function AudiencePage() {
 
   const handleEditProfile = () => {
     setProfile(null)
+    setSubmission(null)
     setStatus('idle')
     setErrorMessage('')
   }
@@ -193,6 +260,7 @@ export default function AudiencePage() {
               <select
                 value={questionValue}
                 onChange={(e) => setQuestionValue(e.target.value)}
+                disabled={status === 'loading'}
               >
                 {QUESTION_OPTIONS.map((option) => (
                   <option
@@ -216,24 +284,43 @@ export default function AudiencePage() {
                 autoComplete="off"
                 maxLength={200}
                 readOnly={isLocked}
+                disabled={status === 'loading'}
                 className={isLocked ? 'audience-input--locked' : undefined}
               />
             </label>
 
             {errorMessage && <p className="audience-error">{errorMessage}</p>}
 
-            {isLocked && (
-              <p className="audience-success" role="status">
-                ส่งคำตอบ {getQuestionLabel(gameType, questionKey)} แล้ว — ไม่สามารถแก้ไขได้
-              </p>
+            {submission && (
+              <div className="audience-submitted">
+                <p className="audience-success" role="status">
+                  ส่งคำตอบ {getQuestionLabel(gameType, questionKey)} แล้ว
+                </p>
+                <dl className="audience-submitted__meta">
+                  <div>
+                    <dt>คำตอบที่บันทึก</dt>
+                    <dd>{submission.answerText}</dd>
+                  </div>
+                  <div>
+                    <dt>เวลาส่ง</dt>
+                    <dd>{formatDateTime(submission.submittedAt)}</dd>
+                  </div>
+                </dl>
+              </div>
             )}
 
             <button
               type="submit"
               className="audience-btn audience-btn--primary"
-              disabled={isLocked || status === 'submitting'}
+              disabled={isLocked || status === 'submitting' || status === 'loading'}
             >
-              {status === 'submitting' ? 'กำลังส่ง...' : 'ส่งคำตอบ'}
+              {status === 'submitting'
+                ? 'กำลังส่ง...'
+                : status === 'loading'
+                  ? 'กำลังโหลด...'
+                  : isLocked
+                    ? 'ส่งแล้ว'
+                    : 'ส่งคำตอบ'}
             </button>
 
             <p className="audience-note">
