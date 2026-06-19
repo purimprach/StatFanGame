@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import GameStartGate from '../components/GameStartGate'
 import RevealOverlay from '../components/RevealOverlay'
 import { useRevealAnimation } from '../hooks/useRevealAnimation'
 import { useBroadcastActiveQuestion } from '../hooks/useActiveQuestion'
@@ -22,6 +23,7 @@ export default function HintPlayPage() {
   const { categoryId } = useParams()
   const navigate = useNavigate()
   const category = getCategoryById(categoryId)
+  const [gameStarted, setGameStarted] = useState(false)
   const [openedHints, setOpenedHints] = useState(() => new Set())
   const [showAnswer, setShowAnswer] = useState(false)
   const [showWinner, setShowWinner] = useState(false)
@@ -34,6 +36,7 @@ export default function HintPlayPage() {
     hintQuestionKey ? 'hint' : null,
     hintQuestionKey,
     hintQuestionKey ? getQuestionLabel('hint', hintQuestionKey) : null,
+    gameStarted,
   )
 
   const answerVisible = useRevealAnimation(showAnswer)
@@ -58,6 +61,10 @@ export default function HintPlayPage() {
   }
 
   const toggleHint = (index) => {
+    if (!gameStarted) {
+      return
+    }
+
     setOpenedHints((prev) => {
       const next = new Set(prev)
       if (next.has(index)) {
@@ -103,6 +110,8 @@ export default function HintPlayPage() {
     }
   }
 
+  const interactionsLocked = !gameStarted || showAnswer
+
   return (
     <div className="landing landing--scroll">
       <PageBackground />
@@ -117,7 +126,7 @@ export default function HintPlayPage() {
             ← กลับไปเลือกหมวด
           </button>
           <div className="hint-play-toolbar__actions">
-            {showAnswer && (
+            {gameStarted && showAnswer && (
               <button
                 type="button"
                 className={
@@ -139,6 +148,7 @@ export default function HintPlayPage() {
                 showAnswer ? 'hint-btn hint-btn--ghost' : 'hint-btn hint-btn--gold'
               }
               onClick={() => (showAnswer ? closeAnswer() : setShowAnswer(true))}
+              disabled={!gameStarted}
             >
               {showAnswer ? 'กลับไปเปิดคำใบ้' : 'เฉลยคำตอบ'}
             </button>
@@ -149,65 +159,67 @@ export default function HintPlayPage() {
           <h1 className="hint-page__title">{category.name}</h1>
         </header>
 
-        <div
-          className={`hint-play-stage ${showAnswer || showWinner ? 'hint-play-stage--revealed' : ''}`}
-        >
-          <div className="hint-panel">
-            <div className="hint-panel__side hint-panel__side--left" aria-hidden="true" />
-            <div className="hint-panel__inner">
-              <section className="hint-list" aria-label={`คำใบ้ ${category.name}`}>
-                {category.hints.map((hint, index) => {
-                  const isOpen = openedHints.has(index)
+        <GameStartGate started={gameStarted} onStart={() => setGameStarted(true)}>
+          <div
+            className={`hint-play-stage ${showAnswer || showWinner ? 'hint-play-stage--revealed' : ''}`}
+          >
+            <div className="hint-panel">
+              <div className="hint-panel__side hint-panel__side--left" aria-hidden="true" />
+              <div className="hint-panel__inner">
+                <section className="hint-list" aria-label={`คำใบ้ ${category.name}`}>
+                  {category.hints.map((hint, index) => {
+                    const isOpen = openedHints.has(index)
 
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      className={`hint-box ${isOpen ? 'hint-box--open' : 'hint-box--closed'}`}
-                      onClick={() => toggleHint(index)}
-                      aria-expanded={isOpen}
-                      disabled={showAnswer}
-                      aria-label={
-                        isOpen
-                          ? `ปิดคำใบ้ ${index + 1}: ${hint}`
-                          : `เปิดคำใบ้ ${index + 1}`
-                      }
-                    >
-                      <span className="hint-box__flip">
-                        <span className="hint-box__face hint-box__face--front">
-                          <span className="hint-box__corners" aria-hidden="true" />
-                          <span className="hint-box__label">{index + 1}</span>
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`hint-box ${isOpen ? 'hint-box--open' : 'hint-box--closed'}`}
+                        onClick={() => toggleHint(index)}
+                        aria-expanded={isOpen}
+                        disabled={interactionsLocked}
+                        aria-label={
+                          isOpen
+                            ? `ปิดคำใบ้ ${index + 1}: ${hint}`
+                            : `เปิดคำใบ้ ${index + 1}`
+                        }
+                      >
+                        <span className="hint-box__flip">
+                          <span className="hint-box__face hint-box__face--front">
+                            <span className="hint-box__corners" aria-hidden="true" />
+                            <span className="hint-box__label">{index + 1}</span>
+                          </span>
+                          <span className="hint-box__face hint-box__face--back">
+                            <span className="hint-box__corners" aria-hidden="true" />
+                            <span className="hint-box__label">{hint}</span>
+                          </span>
                         </span>
-                        <span className="hint-box__face hint-box__face--back">
-                          <span className="hint-box__corners" aria-hidden="true" />
-                          <span className="hint-box__label">{hint}</span>
-                        </span>
-                      </span>
-                    </button>
-                  )
-                })}
-              </section>
+                      </button>
+                    )
+                  })}
+                </section>
+              </div>
+              <div className="hint-panel__side hint-panel__side--right" aria-hidden="true" />
             </div>
-            <div className="hint-panel__side hint-panel__side--right" aria-hidden="true" />
+
+            {showAnswer && (
+              <RevealOverlay
+                label="คำตอบ"
+                text={category.answer}
+                visible={answerVisible}
+              />
+            )}
+
+            {showWinner && (
+              <RevealOverlay
+                label="คนตอบถูกเร็วที่สุด"
+                text={formatWinnerName(winnerData)}
+                buildingStatus="กำลังประกาศ..."
+                visible={winnerVisible}
+              />
+            )}
           </div>
-
-          {showAnswer && (
-            <RevealOverlay
-              label="คำตอบ"
-              text={category.answer}
-              visible={answerVisible}
-            />
-          )}
-
-          {showWinner && (
-            <RevealOverlay
-              label="คนตอบถูกเร็วที่สุด"
-              text={formatWinnerName(winnerData)}
-              buildingStatus="กำลังประกาศ..."
-              visible={winnerVisible}
-            />
-          )}
-        </div>
+        </GameStartGate>
       </main>
     </div>
   )

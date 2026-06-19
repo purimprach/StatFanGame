@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { clearActiveQuestion, setActiveQuestion } from '../lib/activeQuestion'
 
-export function useBroadcastActiveQuestion(gameType, questionKey, label) {
+export function useBroadcastActiveQuestion(gameType, questionKey, label, enabled = true) {
   useEffect(() => {
-    if (!gameType || !questionKey) {
+    if (!enabled || !gameType || !questionKey) {
+      clearActiveQuestion().catch(() => {})
       return undefined
     }
 
@@ -12,7 +13,7 @@ export function useBroadcastActiveQuestion(gameType, questionKey, label) {
     return () => {
       clearActiveQuestion().catch(() => {})
     }
-  }, [gameType, questionKey, label])
+  }, [gameType, questionKey, label, enabled])
 }
 
 export function useClearActiveQuestion() {

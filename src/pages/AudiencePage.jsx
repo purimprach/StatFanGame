@@ -288,9 +288,9 @@ export default function AudiencePage() {
               </div>
             ) : (
               <div className="audience-waiting audience-waiting--card">
-                <p className="audience-waiting__title">รอ MC เปิดเกมบนเวที</p>
+                <p className="audience-waiting__title">รอ MC กดเริ่มเกมบนเวที</p>
                 <p className="audience-waiting__text">
-                  เมื่อเปิดจิ๊กซอว์หรือคำใบ้บนจอใหญ่ ข้อนี้จะเปลี่ยนอัตโนมัติ
+                  เมื่อ MC กด「เริ่มเกม」ข้อนี้จะเปิดให้ส่งคำตอบอัตโนมัติ
                 </p>
               </div>
             )}
