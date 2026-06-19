@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageBackground from '../components/PageBackground'
+import QrJoinModal from '../components/QrJoinModal'
 import '../App.css'
 
 const games = [
@@ -61,6 +63,7 @@ function GameCard({ game, onPlay }) {
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const [showQr, setShowQr] = useState(false)
 
   const handlePlay = (game) => {
     if (game.path) {
@@ -82,8 +85,17 @@ export default function HomePage() {
           <p className="landing__subtitle">
             เกมวัดความเป็นตัวจริงของชาวสถิติ
           </p>
+          <button
+            type="button"
+            className="landing__qr-btn"
+            onClick={() => setShowQr(true)}
+          >
+            สแกน QR Code เพื่อร่วมสนุก
+          </button>
           <div className="landing__divider" aria-hidden="true" />
         </header>
+
+        <QrJoinModal open={showQr} onClose={() => setShowQr(false)} />
 
         <section className="game-grid" aria-label="รายการเกม">
           {games.map((game) => (

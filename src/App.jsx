@@ -8,6 +8,8 @@ import TosakanthCategoryPage from './pages/TosakanthCategoryPage'
 import TosakanthPlayPage from './pages/TosakanthPlayPage'
 import SiasaCategoryPage from './pages/SiasaCategoryPage'
 import SiasaPlayPage from './pages/SiasaPlayPage'
+import AudiencePage from './pages/AudiencePage'
+import AdminAnswersPage from './pages/AdminAnswersPage'
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
       <Route path="/tosakanth/:categoryId" element={<TosakanthPlayPage />} />
       <Route path="/siasa" element={<SiasaCategoryPage />} />
       <Route path="/siasa/:categoryId" element={<SiasaPlayPage />} />
+      <Route path="/audience" element={<AudiencePage />} />
+      <Route path="/admin-answers" element={<AdminAnswersPage />} />
     </Routes>
   )
 }
