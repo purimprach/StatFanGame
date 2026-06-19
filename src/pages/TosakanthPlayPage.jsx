@@ -7,7 +7,7 @@ import {
   getTosakanthCategoryById,
   LIFELINES,
 } from '../data/tosakanthGameData'
-import { playRevealEmphasis } from '../lib/gameSounds'
+import { playRevealEmphasis, playTosakanthLifeline } from '../lib/gameSounds'
 import '../App.css'
 import './HintGame.css'
 import './TosakanthGame.css'
@@ -110,6 +110,7 @@ export default function TosakanthPlayPage() {
     }
 
     setUsedLifelines((prev) => ({ ...prev, [id]: true }))
+    playTosakanthLifeline(id)
 
     if (id === 'friend') {
       setLifelineMessage({
@@ -162,6 +163,7 @@ export default function TosakanthPlayPage() {
                     }`}
                     onClick={() => useLifeline(lifeline.id)}
                     disabled={showAnswer || isUsed}
+                    data-ui-click="off"
                     aria-label={`${lifeline.label}${isUsed ? ' (ใช้แล้ว)' : ''}`}
                   >
                     <span className="tosa-lifeline-card__icon" aria-hidden="true">
