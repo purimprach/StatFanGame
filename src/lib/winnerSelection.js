@@ -19,20 +19,28 @@ function writeLocalSelections(map) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(map))
 }
 
+function toSelection(gameType, questionKey, payload) {
+  return {
+    gameType,
+    questionKey,
+    playerName: payload.player_name ?? payload.playerName,
+    branch: payload.branch ?? null,
+    answerText: payload.answer_text ?? payload.answerText ?? null,
+    sourceAnswerId: payload.source_answer_id ?? payload.sourceAnswerId ?? null,
+    updatedAt: payload.updated_at ?? payload.updatedAt ?? null,
+  }
+}
+
 function mapRow(row) {
   if (!row?.game_type || !row?.question_key || !row?.player_name) {
     return null
   }
 
-  return {
-    gameType: row.game_type,
-    questionKey: row.question_key,
-    playerName: row.player_name,
-    branch: row.branch ?? null,
-    answerText: row.answer_text ?? null,
-    sourceAnswerId: row.source_answer_id ?? null,
-    updatedAt: row.updated_at ?? null,
-  }
+  return toSelection(row.game_type, row.question_key, row)
+}
+
+function notifySelectionChanged() {
+  window.dispatchEvent(new Event('stat55-winner-selection'))
 }
 
 export async function setWinnerSelection({
@@ -53,20 +61,15 @@ export async function setWinnerSelection({
     updated_at: new Date().toISOString(),
   }
 
+  const selection = toSelection(gameType, questionKey, payload)
+
   const local = readLocalSelections()
-  local[selectionKey(gameType, questionKey)] = {
-    gameType,
-    questionKey,
-    playerName: payload.player_name,
-    branch,
-    answerText: payload.answer_text,
-    sourceAnswerId,
-    updatedAt: payload.updated_at,
-  }
+  local[selectionKey(gameType, questionKey)] = selection
   writeLocalSelections(local)
+  notifySelectionChanged()
 
   if (!isSupabaseConfigured()) {
-    return
+    return selection
   }
 
   const { error } = await supabase.from('stat_winner_selection').upsert(payload, {
@@ -74,14 +77,21 @@ export async function setWinnerSelection({
   })
 
   if (error) {
-    throw error
+    throw new Error(
+      error.message?.includes('stat_winner_selection')
+        ? 'ยังไม่ได้สร้างตาราง stat_winner_selection ใน Supabase — รัน migrate-winner-selection.sql ก่อน'
+        : error.message,
+    )
   }
+
+  return selection
 }
 
 export async function clearWinnerSelection({ gameType, questionKey }) {
   const local = readLocalSelections()
   delete local[selectionKey(gameType, questionKey)]
   writeLocalSelections(local)
+  notifySelectionChanged()
 
   if (!isSupabaseConfigured()) {
     return
@@ -100,6 +110,7 @@ export async function clearWinnerSelection({ gameType, questionKey }) {
 
 export async function clearAllWinnerSelections() {
   writeLocalSelections({})
+  notifySelectionChanged()
 
   if (!isSupabaseConfigured()) {
     return
@@ -116,9 +127,10 @@ export async function clearAllWinnerSelections() {
 }
 
 export async function fetchWinnerSelection({ gameType, questionKey }) {
-  const local = readLocalSelections()[selectionKey(gameType, questionKey)]
+  const local = readLocalSelections()[selectionKey(gameType, questionKey)] ?? null
+
   if (!isSupabaseConfigured()) {
-    return local ?? null
+    return local
   }
 
   const { data, error } = await supabase
@@ -129,10 +141,10 @@ export async function fetchWinnerSelection({ gameType, questionKey }) {
     .maybeSingle()
 
   if (error) {
-    throw error
+    return local
   }
 
-  return mapRow(data) ?? local ?? null
+  return mapRow(data) ?? local
 }
 
 export async function fetchDeclaredWinner({ gameType, questionKey }) {
@@ -179,12 +191,16 @@ export function subscribeWinnerSelection({ gameType, questionKey }, onChange) {
 
   const onStorage = (event) => {
     if (event.key === LOCAL_KEY) {
-      const local = readLocalSelections()[selectionKey(gameType, questionKey)] ?? null
-      onChange(local)
+      emitLatest()
     }
   }
 
+  const onLocalChange = () => {
+    emitLatest()
+  }
+
   window.addEventListener('storage', onStorage)
+  window.addEventListener('stat55-winner-selection', onLocalChange)
 
   const pollId = window.setInterval(emitLatest, isSupabaseConfigured() ? 1000 : 1500)
 
@@ -210,6 +226,7 @@ export function subscribeWinnerSelection({ gameType, questionKey }, onChange) {
   return () => {
     cancelled = true
     window.removeEventListener('storage', onStorage)
+    window.removeEventListener('stat55-winner-selection', onLocalChange)
     window.clearInterval(pollId)
     if (channel) {
       supabase.removeChannel(channel)

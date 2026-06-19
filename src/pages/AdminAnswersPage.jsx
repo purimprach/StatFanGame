@@ -7,7 +7,7 @@ import {
 } from '../lib/answersApi'
 import {
   clearWinnerSelection,
-  setWinnerSelection,
+  setWinnerSelection as saveWinnerSelection,
   subscribeWinnerSelection,
 } from '../lib/winnerSelection'
 import {
@@ -98,7 +98,7 @@ export default function AdminAnswersPage() {
     setErrorMessage('')
 
     try {
-      await setWinnerSelection({
+      const selection = await saveWinnerSelection({
         gameType: row.game_type,
         questionKey: row.question_key,
         playerName: row.player_name,
@@ -106,6 +106,7 @@ export default function AdminAnswersPage() {
         answerText: row.answer_text,
         sourceAnswerId: row.id,
       })
+      setWinnerSelection(selection)
       setActionMessage(`ตั้ง ${row.player_name} เป็นผู้ชนะบนเวทีแล้ว`)
     } catch (error) {
       setErrorMessage(error.message ?? 'บันทึกผู้ชนะไม่สำเร็จ')
@@ -124,6 +125,7 @@ export default function AdminAnswersPage() {
 
     try {
       await clearWinnerSelection(activeQuestion)
+      setWinnerSelection(null)
       setActionMessage('ล้างผู้ชนะบนเวทีแล้ว')
     } catch (error) {
       setErrorMessage(error.message ?? 'ล้างผู้ชนะไม่สำเร็จ')
