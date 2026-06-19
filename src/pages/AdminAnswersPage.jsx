@@ -35,6 +35,10 @@ import {
   STUDENT_BRANCH_LABELS,
 } from '../data/randomDrawData'
 import { REGISTRATION_STUDENT_LISTS, REGISTRATION_SUMMARY } from '../data/studentRegistrationLists'
+import {
+  REGISTRATION_TEACHER_COUNT,
+  REGISTRATION_TEACHER_LISTS,
+} from '../data/teacherRegistrationLists'
 import AdminPrizePanel from '../components/AdminPrizePanel'
 import './AdminAnswersPage.css'
 
@@ -404,6 +408,13 @@ export default function AdminAnswersPage() {
     )
   }
 
+  const handleImportTeachersFromRegistration = () => {
+    setDrawTeachersText(namesToText(REGISTRATION_TEACHER_LISTS))
+    setActionMessage(
+      `โหลดรายชื่ออาจารย์แล้ว — ${REGISTRATION_TEACHER_COUNT} คน — กดบันทึกเพื่ออัปเดตจอ MC`,
+    )
+  }
+
   const drawSavedSummary = drawListsSaved
     ? `นิสิต ${flattenStudents(drawListsSaved.students).length} คน · อาจารย์ ${drawListsSaved.teachers.length} คน`
     : null
@@ -622,6 +633,13 @@ export default function AdminAnswersPage() {
             </label>
 
             <div className="admin-arrival-form__actions">
+              <button
+                type="button"
+                className="admin-btn admin-btn--ghost"
+                onClick={handleImportTeachersFromRegistration}
+              >
+                โหลดรายชื่ออาจารย์
+              </button>
               <button
                 type="button"
                 className="admin-btn admin-btn--ghost"

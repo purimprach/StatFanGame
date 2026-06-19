@@ -1,6 +1,7 @@
 import { BRANCH_OPTIONS } from '../data/questions'
 import { EMPTY_STUDENT_LISTS } from '../data/randomDrawData'
 import { REGISTRATION_STUDENT_LISTS } from '../data/studentRegistrationLists'
+import { REGISTRATION_TEACHER_LISTS } from '../data/teacherRegistrationLists'
 import { isSupabaseConfigured, supabase } from './supabase'
 
 const LOCAL_KEY = 'stat55_draw_lists'
@@ -35,12 +36,14 @@ function mapRow(row) {
   const students = normalizeStudents(row?.students)
   const teachers = normalizeTeachers(row?.teachers)
   const studentsEmpty = BRANCH_OPTIONS.every((branch) => students[branch].length === 0)
+  const teachersEmpty = teachers.length === 0
 
   return {
     students: studentsEmpty ? normalizeStudents(REGISTRATION_STUDENT_LISTS) : students,
-    teachers,
+    teachers: teachersEmpty ? [...REGISTRATION_TEACHER_LISTS] : teachers,
     updatedAt: row?.updated_at ?? null,
     usingRegistrationFallback: studentsEmpty,
+    usingTeacherRegistrationFallback: teachersEmpty,
   }
 }
 
