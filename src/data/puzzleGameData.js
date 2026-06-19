@@ -30,7 +30,7 @@ export const puzzleCategories = [
     label: 'ภาพ C',
     image: puzzleC,
     aspectRatio: 576 / 1024,
-    answer: 'รศ. ดร.อัษฎาพร ทรัพย์สมบูรณ์',
+    answer: 'รศ. ดร.จันทร์เจ้า มงคลนาวิน',
     available: true,
   },
 ]

@@ -4,7 +4,7 @@ import { ANSWER_KEY } from '../data/answerKey'
 const JIGSAW_ANY_TOKEN_RULES = {
   A: ['ภูริพันธุ์', 'โจ้'],
   B: ['ฐิตา', 'กี้'],
-  C: ['อัษฎาพร', 'อัษ', 'อัฐ', 'อัส'],
+  C: ['จันทร์เจ้า', 'มงคลนาวิน'],
 }
 
 function checkJigsawAnyTokenAnswer(stripped, tokens) {
