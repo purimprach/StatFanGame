@@ -175,7 +175,26 @@ export const siasaCategories = [
   },
 ]
 
+export const SIASA_DEMO_CATEGORY = {
+  id: 'example',
+  name: '★',
+  label: 'ตัวอย่าง',
+  available: true,
+  isDemo: true,
+  rounds: [
+    {
+      prompt: 'งนบยนยร',
+      answer: 'งานบายเนียร์',
+      hint: 'สำหรับบัณฑิตจบใหม่',
+    },
+  ],
+}
+
 export function getSiasaCategoryById(id) {
+  if (id === SIASA_DEMO_CATEGORY.id) {
+    return SIASA_DEMO_CATEGORY
+  }
+
   return siasaCategories.find((category) => category.id === id)
 }
 

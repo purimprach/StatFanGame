@@ -261,7 +261,9 @@ export default function SiasaPlayPage() {
 
   const isLastRound = roundIndex >= category.rounds.length - 1
   const isFirstRound = roundIndex === 0
+  const isDemo = Boolean(category.isDemo)
   const roundHint = getRoundHint(currentRound)
+  const finishLabel = isDemo ? 'กลับเลือกหมวด' : 'จบหมวด'
 
   const resetRound = () => {
     setShowAnswer(false)
@@ -430,6 +432,14 @@ export default function SiasaPlayPage() {
             </div>
             <p className="siasa-round-header__meta">
               <span>{category.label}</span>
+              {isDemo && (
+                <>
+                  <span className="siasa-round-header__dot" aria-hidden="true">
+                    ·
+                  </span>
+                  <span>สำหรับอาจารย์</span>
+                </>
+              )}
               <span className="siasa-round-header__dot" aria-hidden="true">
                 ·
               </span>
@@ -438,6 +448,12 @@ export default function SiasaPlayPage() {
               </span>
             </p>
           </header>
+
+          {isDemo && !showAnswer && (
+            <p className="siasa-demo-banner" role="status">
+              ตัวอย่าง — ลองเล่นตามขั้นตอนจริง (compact → ขยาย → คำใบ้ → เฉลย)
+            </p>
+          )}
 
           <div className={`siasa-panel ${showAnswer ? 'siasa-panel--revealed' : ''}`}>
             <div className="siasa-panel__side siasa-panel__side--left" aria-hidden="true" />
@@ -515,7 +531,7 @@ export default function SiasaPlayPage() {
                 className="hint-btn hint-btn--gold siasa-actions__btn"
                 onClick={handleSkip}
               >
-                {isLastRound ? 'จบหมวด' : 'คำถัดไป'}
+                {isLastRound ? finishLabel : 'คำถัดไป'}
               </button>
             ) : (
               <>
@@ -531,7 +547,7 @@ export default function SiasaPlayPage() {
                   className="hint-btn hint-btn--ghost siasa-actions__btn"
                   onClick={handleSkip}
                 >
-                  {isLastRound ? 'จบหมวด' : 'ข้าม'}
+                  {isLastRound ? finishLabel : 'ข้าม'}
                 </button>
               </>
             )}

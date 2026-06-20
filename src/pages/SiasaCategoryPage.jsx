@@ -45,6 +45,18 @@ export default function SiasaCategoryPage() {
             </button>
           ))}
         </section>
+
+        <button
+          type="button"
+          className="siasa-category-example"
+          onClick={() => navigate('/siasa/example')}
+        >
+          <span className="siasa-category-example__icon" aria-hidden="true">
+            📖
+          </span>
+          <span className="siasa-category-example__label">ตัวอย่าง</span>
+          <span className="siasa-category-example__desc">ลองเล่นก่อนเริ่มเกมจริง</span>
+        </button>
       </main>
     </div>
   )

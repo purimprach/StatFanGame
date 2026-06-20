@@ -69,6 +69,60 @@
   color: var(--text-white);
 }
 
+.siasa-category-example {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 420px;
+  margin: 1.5rem auto 0;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px dashed rgba(212, 175, 55, 0.55);
+  background: rgba(212, 175, 55, 0.08);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease,
+    background 0.35s ease;
+}
+
+.siasa-category-example:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.85);
+  background: rgba(212, 175, 55, 0.14);
+}
+
+.siasa-category-example__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.siasa-category-example__label {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--gold-light);
+}
+
+.siasa-category-example__desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.siasa-demo-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--gold-light);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
 .siasa-placeholder {
   display: flex;
   flex-direction: column;
