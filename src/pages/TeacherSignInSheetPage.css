@@ -1,7 +1,7 @@
 .teacher-signin {
   max-width: 56rem;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 2.5rem;
+  padding: 1.25rem 1rem 2.5rem;
   color: #111827;
   background: #fff;
   font-size: 0.95rem;
@@ -9,7 +9,7 @@
 }
 
 .teacher-signin__header {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #111827;
 }
@@ -34,45 +34,108 @@
 
 .teacher-signin__meta {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
   margin-bottom: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.65rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
 }
 
 .teacher-signin__meta p {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.65rem;
+  gap: 0.5rem 0.65rem;
   margin: 0;
 }
 
 .teacher-signin__meta span:first-child {
   flex: 0 0 4.5rem;
   font-weight: 700;
+  color: #6b7280;
 }
 
-.teacher-signin__line {
-  flex: 1;
-  min-width: 8rem;
-  border-bottom: 1px solid #9ca3af;
-  min-height: 1.35rem;
+.teacher-signin__meta strong {
+  font-weight: 700;
+  color: #111827;
 }
 
-.teacher-signin__line--wide {
-  min-width: 16rem;
+.teacher-signin__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
 }
 
-.teacher-signin__print {
+.teacher-signin__summary-item {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.teacher-signin__summary-item--present {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.teacher-signin__summary-item--absent {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.teacher-signin__summary-item--pending {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.teacher-signin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.teacher-signin__print,
+.teacher-signin__reset {
+  min-height: 2.75rem;
   padding: 0.55rem 1rem;
-  border: 1px solid #111827;
-  border-radius: 0.5rem;
-  background: #111827;
-  color: #fff;
+  border-radius: 0.65rem;
   font-weight: 700;
   cursor: pointer;
 }
 
+.teacher-signin__print {
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+}
+
+.teacher-signin__reset {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+}
+
+.teacher-signin__saved {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.teacher-signin__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .teacher-signin__table {
   width: 100%;
+  min-width: 36rem;
   border-collapse: collapse;
   font-size: 0.92rem;
 }
@@ -80,7 +143,7 @@
 .teacher-signin__table th,
 .teacher-signin__table td {
   border: 1px solid #374151;
-  padding: 0.5rem 0.65rem;
+  padding: 0.45rem 0.55rem;
   text-align: left;
   vertical-align: middle;
 }
@@ -89,40 +152,84 @@
   background: #111827;
   color: #fff;
   font-weight: 700;
-}
-
-.teacher-signin__table tbody tr:nth-child(even) {
-  background: #f9fafb;
+  text-align: center;
 }
 
 .teacher-signin__col-no {
-  width: 3.25rem;
-  text-align: center !important;
+  width: 3rem;
+}
+
+.teacher-signin__col-tick {
+  width: 4.25rem;
+}
+
+.teacher-signin__col-sign {
+  width: 22%;
+}
+
+.teacher-signin__col-note {
+  width: 14%;
 }
 
 .teacher-signin__table tbody td:first-child {
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
   color: #374151;
 }
 
-.teacher-signin__col-name {
-  width: 42%;
+.teacher-signin__name-cell {
+  font-weight: 600;
+  line-height: 1.35;
 }
 
-.teacher-signin__col-sign {
-  width: 28%;
-  min-height: 2rem;
+.teacher-signin__row--present {
+  background: #f0fdf4;
 }
 
-.teacher-signin__col-note {
-  width: 18%;
+.teacher-signin__row--absent {
+  background: #fef2f2;
 }
 
-.teacher-signin__table tbody td:nth-child(3),
-.teacher-signin__table tbody td:nth-child(4) {
-  min-height: 2.25rem;
-  height: 2.25rem;
+.teacher-signin__tick-cell {
+  text-align: center;
+  padding: 0.35rem;
+}
+
+.teacher-signin__tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0 auto;
+  border: 2px solid #9ca3af;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teacher-signin__tick--present.teacher-signin__tick--active {
+  border-color: #16a34a;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.teacher-signin__tick--absent.teacher-signin__tick--active {
+  border-color: #dc2626;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.teacher-signin__sign-cell,
+.teacher-signin__note-cell {
+  min-height: 2.5rem;
+  height: 2.5rem;
 }
 
 .teacher-signin__footer {
@@ -134,11 +241,11 @@
 }
 
 .teacher-signin__footer p {
-  margin: 0.2rem 0;
+  margin: 0;
 }
 
-.teacher-signin__footer-note {
-  font-style: italic;
+.teacher-signin__print-only {
+  display: none;
 }
 
 @media print {
@@ -147,26 +254,51 @@
     padding: 0;
   }
 
-  .teacher-signin__print {
-    display: none;
+  .teacher-signin__no-print {
+    display: none !important;
+  }
+
+  .teacher-signin__print-only {
+    display: block;
   }
 
   .teacher-signin__table {
     font-size: 0.85rem;
+    min-width: 0;
   }
 
   .teacher-signin__table th,
   .teacher-signin__table td {
-    padding: 0.4rem 0.5rem;
+    padding: 0.35rem 0.45rem;
   }
 
   .teacher-signin__table tbody tr {
     break-inside: avoid;
   }
 
-  .teacher-signin__table tbody td:nth-child(3),
-  .teacher-signin__table tbody td:nth-child(4) {
+  .teacher-signin__tick {
+    width: 1.35rem;
+    height: 1.35rem;
+    min-width: 1.35rem;
+    min-height: 1.35rem;
+    border: 1px solid #111827;
+    border-radius: 0.2rem;
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .teacher-signin__tick:not(.teacher-signin__tick--active) {
+    color: transparent;
+  }
+
+  .teacher-signin__sign-cell,
+  .teacher-signin__note-cell {
     min-height: 2rem;
     height: 2rem;
+  }
+
+  .teacher-signin__row--present,
+  .teacher-signin__row--absent {
+    background: transparent;
   }
 }
