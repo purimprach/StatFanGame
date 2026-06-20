@@ -160,7 +160,7 @@
 }
 
 .teacher-signin__col-tick {
-  width: 4.25rem;
+  width: 2.75rem;
 }
 
 .teacher-signin__col-sign {
@@ -192,21 +192,21 @@
 
 .teacher-signin__tick-cell {
   text-align: center;
-  padding: 0.35rem;
+  padding: 0.4rem 0.25rem;
 }
 
 .teacher-signin__tick {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
   margin: 0 auto;
-  border: 2px solid #9ca3af;
-  border-radius: 0.45rem;
+  border: 1.5px solid #9ca3af;
+  border-radius: 0.22rem;
   background: #fff;
   color: #111827;
-  font-size: 1.25rem;
+  font-size: 0.78rem;
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
