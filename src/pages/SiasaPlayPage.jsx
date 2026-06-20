@@ -449,12 +449,6 @@ export default function SiasaPlayPage() {
             </p>
           </header>
 
-          {isDemo && !showAnswer && (
-            <p className="siasa-demo-banner" role="status">
-              ตัวอย่าง — ลองเล่นตามขั้นตอนจริง (compact → ขยาย → คำใบ้ → เฉลย)
-            </p>
-          )}
-
           <div className={`siasa-panel ${showAnswer ? 'siasa-panel--revealed' : ''}`}>
             <div className="siasa-panel__side siasa-panel__side--left" aria-hidden="true" />
             <div className="siasa-panel__inner">
