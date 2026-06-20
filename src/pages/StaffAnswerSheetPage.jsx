@@ -49,6 +49,10 @@ export default function StaffAnswerSheetPage() {
               <th>เอกสารนี้</th>
               <td>{SITE_URL}/staff-answers</td>
             </tr>
+            <tr>
+              <th>ใบลงชื่ออาจารย์</th>
+              <td>{SITE_URL}/teacher-signin</td>
+            </tr>
           </tbody>
         </table>
       </section>

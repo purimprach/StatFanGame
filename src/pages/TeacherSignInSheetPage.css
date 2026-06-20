@@ -1,0 +1,172 @@
+.teacher-signin {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  color: #111827;
+  background: #fff;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.teacher-signin__header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #111827;
+}
+
+.teacher-signin__badge {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #92400e;
+}
+
+.teacher-signin__header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.teacher-signin__subtitle {
+  margin: 0.35rem 0 0.85rem;
+  color: #4b5563;
+}
+
+.teacher-signin__meta {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.teacher-signin__meta p {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.teacher-signin__meta span:first-child {
+  flex: 0 0 4.5rem;
+  font-weight: 700;
+}
+
+.teacher-signin__line {
+  flex: 1;
+  min-width: 8rem;
+  border-bottom: 1px solid #9ca3af;
+  min-height: 1.35rem;
+}
+
+.teacher-signin__line--wide {
+  min-width: 16rem;
+}
+
+.teacher-signin__print {
+  padding: 0.55rem 1rem;
+  border: 1px solid #111827;
+  border-radius: 0.5rem;
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.teacher-signin__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.teacher-signin__table th,
+.teacher-signin__table td {
+  border: 1px solid #374151;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.teacher-signin__table thead th {
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+}
+
+.teacher-signin__table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.teacher-signin__col-no {
+  width: 3.25rem;
+  text-align: center !important;
+}
+
+.teacher-signin__table tbody td:first-child {
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+}
+
+.teacher-signin__col-name {
+  width: 42%;
+}
+
+.teacher-signin__col-sign {
+  width: 28%;
+  min-height: 2rem;
+}
+
+.teacher-signin__col-note {
+  width: 18%;
+}
+
+.teacher-signin__table tbody td:nth-child(3),
+.teacher-signin__table tbody td:nth-child(4) {
+  min-height: 2.25rem;
+  height: 2.25rem;
+}
+
+.teacher-signin__footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #9ca3af;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.teacher-signin__footer p {
+  margin: 0.2rem 0;
+}
+
+.teacher-signin__footer-note {
+  font-style: italic;
+}
+
+@media print {
+  .teacher-signin {
+    max-width: none;
+    padding: 0;
+  }
+
+  .teacher-signin__print {
+    display: none;
+  }
+
+  .teacher-signin__table {
+    font-size: 0.85rem;
+  }
+
+  .teacher-signin__table th,
+  .teacher-signin__table td {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .teacher-signin__table tbody tr {
+    break-inside: avoid;
+  }
+
+  .teacher-signin__table tbody td:nth-child(3),
+  .teacher-signin__table tbody td:nth-child(4) {
+    min-height: 2rem;
+    height: 2rem;
+  }
+}

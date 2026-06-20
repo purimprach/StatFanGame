@@ -13,6 +13,7 @@ import RandomDrawPage from './pages/RandomDrawPage'
 import AudiencePage from './pages/AudiencePage'
 import AdminAnswersPage from './pages/AdminAnswersPage'
 import StaffAnswerSheetPage from './pages/StaffAnswerSheetPage'
+import TeacherSignInSheetPage from './pages/TeacherSignInSheetPage'
 
 export default function App() {
   useUiClickSounds()
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/audience" element={<AudiencePage />} />
       <Route path="/admin-answers" element={<AdminAnswersPage />} />
       <Route path="/staff-answers" element={<StaffAnswerSheetPage />} />
+      <Route path="/teacher-signin" element={<TeacherSignInSheetPage />} />
     </Routes>
   )
 }
